@@ -1,0 +1,10 @@
+# failing to execute 'cd' command w/file not found; ???
+screen -t lib
+screen -t scripts
+screen -t tests
+screen -t mysql
+screen -t cgi-bin
+screen -t htdocs
+screen -t plugins
+screen -t sandbox
+screen -t man

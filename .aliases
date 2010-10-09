@@ -38,9 +38,13 @@ alias grits 'ssh grits'
 alias fido 'ssh fido'
 alias samson 'ssh samson'
 alias fala 'ssh fala'
+alias pnwmom 'ssh pnwmomor@pnwmom.org'		# pwd: Moto1
 alias alamo 'ssh victor@t1dbase.cimr.cam.ac.uk'
 alias mimas 'ssh vcassen@mimas'
 alias bobama 'ssh vcassen@bobama'
+alias moonraker 'ssh vcassen@moonraker'
+alias virtus 'ssh vcassen@virtus'
+alias aegir 'ssh vcassen@aegir'
 
 alias devserver 'ssh gdxbase.cimr.cam.ac.uk'
 alias dict 'l /usr/share/dict/words'
@@ -50,6 +54,7 @@ alias wwwac 'tail -f /usr/local/apache/logs/access_log'
 alias weberrors 'tail -f /workspace/vcassen/TACO/logs/t1dbase-error_log | /users/vcassen/bin/filter_logs'
 
 #alias kickwww 'kill -HUP `cat /var/run/httpd.pid`; tail -f /var/log/httpd/error_log'
+alias kick_slimseq 'touch /net/dblocal/apps/SLIMarray/rails/cap_slimarray_staging/slimseq_phonybone/tmp/restart.txt'
 
 alias briefStatus 'cvs status |& egrep "^\?|Status" | grep -v Up-to-date'
 alias cvsupdate 'cvs -q update -dP | ~/bin/update_filter.pl'
@@ -57,25 +62,30 @@ alias cvsrm 'rm \*!; cvs remove \*!'
 alias cvscobranch 'cvs -z3 -d:ext:phonybone@cvs.sourceforge.net:/cvsroot/isbiology co -r release_2_5_branch_20060116 \!*'
 alias cvsfala 'cvs -z3 -d:ext:vcassen@fala.systemsbiology.net:/home/vcassen/cvs_repository'
 alias cvsmcs 'cvs -z3 -d:ext:motorcy7@motorcyclesoccer.com:/home/motorcy7/cvs_repository'
-
+alias git-night 'git status | grep modified | cut -f2 -d: | xargs git commit -m "nightly upload"; git push'
 
 alias subs 'egrep "^sub |__END__" \!*'
 alias perlman 'perldoc `findPackage \!*`'
-
 alias dust "find . -name '*~*' -print -exec rm {} \; ; find . -name '.#*' -print -exec rm {} \; ; find . -name 'core.[0-9]*' -exec rm {} \;"
 alias dusttest "find . -name '*~*' ; find . -name '.#*' ; find . -name 'core.[0-9]*'"
 #alias ds2      "find . -name '*~*' -exec du -H {}\; ; echo done"
 #alias ds2 "find . -name '*~*' -exec du -H {} \; -exec rm {} \; ; echo done"
 
+alias ff 'find . -name \!* -print'
+
 alias run_last "source ~/bin/run_last \!*"
 alias pd pushd
 alias pd1 'pushd +1'
 alias pd2 'pushd +2'
-#alias dirss 'dirs | perl -ne "warn join(/\n/,split(/\s/)),\"\n\""'
+alias dirs 'dirs -v'
 alias 'cd..' 'cd ..'
-alias firefox '~/bin/firefox/firefox >& /dev/null &'
-alias firefox_dev '~/bin/firefox/firefox -P dev &'
+#alias firefox '~/bin/firefox/firefox >& /dev/null &'
+#alias firefox_dev '~/bin/firefox/firefox -P dev &'
 
 alias synergy '~/bin/bin/synergys --config ~/bin/.synergy.conf'
 alias qopera 'opera >& /dev/null &'
-alias qfirefox '~/bin/firefox/firefox >& /dev/null &'
+#alias qfirefox '~/bin/firefox/firefox >& /dev/null &'
+
+alias python '/tools/bin/python'
+alias slimsql 'mysql -h deimos -u root -p slimseq_staging'
+alias kickss 'touch ~/slimseq_phonybone/tmp/restart.txt'

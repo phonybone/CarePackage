@@ -121,11 +121,14 @@
 (global-set-key [M-down] 'end-of-buffer)
 (global-set-key "\C-x'" 'next-error)
 (global-set-key "\C-c\t" 'auto-fill-mode)
-(global-set-key "\C-c\t" 'auto-fill-mode)
 (set-variable 'scroll-step 0)
 
-(global-set-key [home]   'beginning-of-buffer) ;
-(global-set-key [end]    'end-of-buffer) ;
+(fset 'remove-got-heres
+   "\C-swarn \"got here\C-a\C-k\C-k")
+(global-set-key "\C-x!"    'remove-got-heres) ;
+
+(global-set-key [home]   'beginning-of-buffer) 
+(global-set-key [end]    'end-of-buffer) 
 
 (scroll-bar-mode nil)
 (setq make-backup-files nil)
@@ -140,7 +143,6 @@
 (setq auto-mode-alist
          (append '(("\\.js$" . javascript-mode))
                   auto-mode-alist))
-
 
 ;; php mode:
 (defun php-mode-hook ()
@@ -171,13 +173,5 @@
 
 ;(require 'jde)
 
-; Load org-mode:
-(setq load-path (cons "/local/software/org-6.23b/lisp" load-path))
-(require 'org-install)
-
-;; The following lines are always needed.  Choose your own keys.
-(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode))
-(global-set-key "\C-cl" 'org-store-link)
-(global-set-key "\C-ca" 'org-agenda)
-(global-set-key "\C-cb" 'org-iswitchb)
-(add-hook 'org-mode-hook 'turn-on-font-lock) 
+;; org-mode
+(setq load-path (cons "/users/vcassen/software/org-6.28e/lisp" load-path))

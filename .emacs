@@ -175,3 +175,28 @@
 
 ;; org-mode
 (setq load-path (cons "/users/vcassen/software/org-6.28e/lisp" load-path))
+
+;; load personal macros (needs a check for the existance of the file)
+;;(load '.emacs-macros)
+
+;; Make searches case-insensitive
+(setq case-fold-search t)
+
+;; -----------------------------------------------------------------------------
+;; Git support
+;; -----------------------------------------------------------------------------
+(load "/usr/share/doc/git-1.7.1/contrib/emacs/git.el")
+(load "/usr/share/doc/git-1.7.1/contrib/emacs/git-blame.el")
+(load "/usr/share/emacs/23.1/lisp/vc-git.elc")
+(add-to-list 'vc-handled-backends 'GIT)
+
+(fset 'perl-moose-insert-has
+   [?h ?a ?s ?  ?\' ?\' ?  ?= ?> ?\S-  ?\( ?i ?s ?= ?> ?\' ?r ?w ?\' ?, ?  ?i ?s ?a ?= ?> ?\' ?S ?t ?r ?\' ?\) ?\; ?\C-a right right right right right])
+(add-hook 'perl-mode-hook '(lambda() (local-set-key "\C-ch" 'perl-moose-insert-has)))
+
+(fset 'python-insert-warn
+   "\C-iwarn(\"\" % ())\C-r\"\C-m")
+
+
+(add-hook 'python-mode-hook '(lambda() (local-set-key "\C-cw" 'python-insert-warn)))
+

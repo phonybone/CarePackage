@@ -1,0 +1,12 @@
+#-*-sh-*-
+
+function current_git_branch() {
+    br=`git branch 2>/dev/null | grep '^\*' | cut -f2 -d\  `
+    if [ "X$br" != "X" ] ; then
+	echo "git::${br}"
+    else
+	echo
+    fi
+}
+
+

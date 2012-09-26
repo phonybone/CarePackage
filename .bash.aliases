@@ -76,4 +76,8 @@ alias kickss='touch ~/slimseq_phonybone/tmp/restart.txt'
 
 alias py=python
 alias antrun='ant -Dmain_class=\!:1 run'
-alias mongo_start='mongod --fork --dbpath /mnt/price1/vcassen/mongo_dbs/ --logpath /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log --logappend --replSet geo --port 27017; tail -f /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log'
+alias mongo_start='mongod --fork --dbpath /mnt/price1/vcassen/mongo_dbs/ --logpath /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log --logappend --port 27017; tail -f /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log'
+alias mongo_start_dist='mongod --fork --dbpath /mnt/price1/vcassen/mongo_dbs/ --logpath /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log --logappend --replSet geo --port 27017; tail -f /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log'
+
+alias 'aws-micro'="ssh -i ${HOME}/Dropbox/AWS/micro_kp.pem ec2-user@ec2-50-17-110-122.compute-1.amazonaws.com"
+

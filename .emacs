@@ -200,3 +200,10 @@
 
 (add-hook 'python-mode-hook '(lambda() (local-set-key "\C-cw" 'python-insert-warn)))
 
+(transient-mark-mode 0)
+
+;; Add error detection for maven errors, so C-x ` works as expected (we hope)
+(add-to-list 'compilation-error-regexp-alist 'maven)
+(add-to-list 'compilation-error-regexp-alist-alist
+       '(maven "\\[ERROR\\] \\(.+?\\):\\[\\([0-9]+\\),\\([0-9]+\\)\\].*"
+           1 2 3))

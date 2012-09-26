@@ -1,4 +1,4 @@
-# .bash_profile
+# .bash_profile: executed for login shells
 
 # Get the aliases and functions
 if [ -f ~/.bashrc ]; then
@@ -7,7 +7,6 @@ fi
 
 # User specific environment and startup programs
 
-PATH=$PATH:$HOME/bin
 
-export PATH
-unset USERNAME
+
+

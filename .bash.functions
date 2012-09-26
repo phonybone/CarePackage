@@ -9,4 +9,128 @@ function current_git_branch() {
     fi
 }
 
+# find all perl subs in a file
+function subs() { 
+    egrep -E '^(sub |__END__)' $1 
+}
 
+function psgrep() {
+    ps aux | grep "$1"
+}
+
+function ff() {
+    find . -name "$1"
+}
+
+# move up N directories:
+function up() { 
+    for ((j=${1:-1},i=0;i<j;i++)); do 
+	builtin cd ..;
+    done;
+}
+
+# move up to a named directory (does nothing if dir not found):
+function upto() {
+    target=$1
+    start_dir=$PWD
+    
+    SEQ=/usr/bin/seq
+
+#    debug="echo"
+#    debug="true"
+
+    oldifs="$IFS"
+    IFS="/"
+
+    j=0
+    for i in $start_dir
+    do
+	a[$j]=$i
+#	$debug " set item $j, ${a[$j]}"
+	j=$(( j+1 ))
+    done
+
+    yay=0
+    IFS="$oldifs"
+
+    for ((i=${#a[@]}-1; i>=0; i--))
+    do
+#	echo ${a[$i]} = $target \?
+	if [ "${a[$i]}" = "$target" ]; then
+	    yay=1;
+	    break;
+	fi
+	builtin cd ..;
+    done
+    unset a			# otherwise it mucks up the next call to upto
+
+    if [ $yay -eq 0 ]; then
+#	echo darn
+	builtin cd $start_dir
+    fi
+}
+
+function blah() {
+    a=(this that these those)
+#    for i in $($SEQ $((${#a[@]} - 1)) 0)
+    for ((i=${#a[@]}-1; i>=0; i--))
+    do
+        echo a $i ${a[$i]}
+    done
+}
+
+# mvn-create $groupId $artifactId $version
+# mvn-create $groupId $artifactId (version defaults to 1.0)
+# mvn-create $artifactId (like above, and groupId defaults to org.sysbiology)
+function mvn-create() {
+    if [ $# -eq 1 ]; then
+	groupId='org.systemsbiology'
+        artifactId=$1
+        version=1.0
+    elif [ $# -eq 2 ]; then
+        groupId=$1
+	artifactId=$2
+        version=1.0
+    elif [ $# -eq 3 ]; then
+	groupId=$1
+	artifactId=$2
+	version=$3
+    else
+        echo usage $0 '[groupId]' '<artifactId>' '[version]'
+        return
+    fi
+
+    if [ -z $artifactId ]; then
+        echo artifactId not set
+	return 
+    fi
+
+    mvn archetype:generate \
+	-DarchetypeGroupId=org.apache.maven.archetypes \
+	-DgroupId=$groupId \
+	-DartifactId=$artifactId \
+        -Dversion=$version
+}
+
+function mvn-run() {
+    mvn exec:java -Dexec.mainClass="$1"
+}
+
+function mvn-install() {
+    file=$1
+    group_id=$2
+    artifact_id=$3
+    version=$4
+    packaging=jar
+    mvn install:install-file \
+	-Dfile=$file \
+	-DgroupId=$group_id \
+	-DartifactId=$artifact_id \
+	-Dversion=$version \
+	-Dpackaging=$packaging \
+	-DgeneratePom=true
+}
+
+function here() {
+    cd `/bin/pwd`
+}

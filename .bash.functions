@@ -80,17 +80,17 @@ function blah() {
 }
 
 # mvn-create $groupId $artifactId $version
-# mvn-create $groupId $artifactId (version defaults to 1.0)
+# mvn-create $groupId $artifactId (version defaults to 0.01)
 # mvn-create $artifactId (like above, and groupId defaults to org.sysbiology)
 function mvn-create() {
     if [ $# -eq 1 ]; then
 	groupId='org.systemsbiology'
         artifactId=$1
-        version=1.0
+        version=0.01
     elif [ $# -eq 2 ]; then
         groupId=$1
 	artifactId=$2
-        version=1.0
+        version=0.01
     elif [ $# -eq 3 ]; then
 	groupId=$1
 	artifactId=$2
@@ -112,10 +112,12 @@ function mvn-create() {
         -Dversion=$version
 }
 
+# run a jar:
 function mvn-run() {
     mvn exec:java -Dexec.mainClass="$1"
 }
 
+# Call mvn install:install-file to the local .m2 repo:
 function mvn-install() {
     file=$1
     group_id=$2

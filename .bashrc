@@ -16,31 +16,23 @@ if [ -f $HOME/.bash.functions ]; then
   . $HOME/.bash.functions
 fi
 
+if [ -f $HOME/.bashrc.local ]; then
+  . $HOME/.bashrc.local
+fi
 
-
-#PATH=$PATH:$HOME/bin
-PATH=/usr/lib64/qt-3.3/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/usr/local/bin:/home/ISB/vcassen/bin
-export PATH
 
 export CDPATH=.:$HOME
 set cdpath=$HOME
 
-
-export PS1="\$(current_git_branch) ($?) \w\$ "
-
-
-export TRENDS_HOME="/mnt/price1/vcassen/trends"
-export AUREA_HOME="/mnt/price1/vcassen/AUREA"
-export AUREA_SRC="${AUREA_HOME}/src/AUREA"
-
-export AWS_SWF_SAMPLES_CONFIG=/home/ISB/vcassen/sandbox/java/aws/aws-java-sdk-1.3.18/samples/AwsFlowFramework
+export PS1="[\h] <\$(current_git_branch)> ($?) \w\$ "
 
 # AWS cmd-line stuff:
 if [ -r $HOME/.bash.aws ]; then
   . $HOME/.bash.aws
 fi
 
-export EDITOR=/usr/bin/emacs
+export EDITOR=`which emacs`
 
 bind 'set match-hidden-files off'
+export HISTCONTROL=ignoredups
 

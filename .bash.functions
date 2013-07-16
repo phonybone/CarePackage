@@ -34,11 +34,6 @@ function upto() {
     target=$1
     start_dir=$PWD
     
-    SEQ=/usr/bin/seq
-
-#    debug="echo"
-#    debug="true"
-
     oldifs="$IFS"
     IFS="/"
 
@@ -72,7 +67,6 @@ function upto() {
 
 function blah() {
     a=(this that these those)
-#    for i in $($SEQ $((${#a[@]} - 1)) 0)
     for ((i=${#a[@]}-1; i>=0; i--))
     do
         echo a $i ${a[$i]}
@@ -113,8 +107,9 @@ function mvn-create() {
 }
 
 # run a jar:
+# mvn-run $main_class [$arg1 $arg2 ...]
 function mvn-run() {
-    mvn exec:java -Dexec.mainClass="$1"
+    mvn exec:java -Dexec.mainClass="$1" -Dexec.args="${@:2}"
 }
 
 # Call mvn install:install-file to the local .m2 repo:

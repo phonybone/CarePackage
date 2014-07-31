@@ -8,17 +8,13 @@ fi
 # Aliases and functions go here.
 # User specific environment and startup programs go in .bash_profile
 
-if [ -f $HOME/.bash.aliases ]; then
-  . $HOME/.bash.aliases
-fi
-
-if [ -f $HOME/.bash.functions ]; then
-  . $HOME/.bash.functions
-fi
-
-if [ -f $HOME/.bashrc.local ]; then
-  . $HOME/.bashrc.local
-fi
+files=( ".bash.aliases" ".bash.functions" ".bashrc.local" )
+for file in "${files[@]}"; do 
+  if [ -f $HOME/$file ]; then
+    echo running $file...
+    . $HOME/$file
+  fi
+done
 
 
 export CDPATH=.:$HOME

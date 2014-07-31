@@ -11,7 +11,6 @@ fi
 files=( ".bash.aliases" ".bash.functions" ".bashrc.local" )
 for file in "${files[@]}"; do 
   if [ -f $HOME/$file ]; then
-    echo running $file...
     . $HOME/$file
   fi
 done

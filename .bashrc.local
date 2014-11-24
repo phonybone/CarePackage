@@ -1,0 +1,34 @@
+# start virtual python environment
+default_venv=/local/vpython/bin/activate
+if [ -f $default_env ]; then
+   # check to see if already running a virtual env; if so don't run a new one:
+   python_exe=`which python`
+   python_dir=`dirname $python_exe`
+
+   if [ ! -e "${python_dir}/activate" ]; then
+       source $default_venv
+   fi
+fi
+
+export PATH=$PATH:~/bin
+export CDPATH=.:$HOME
+set cdpath=$HOME
+
+export PS1="[\h] <\$(current_git_branch)> ($?) \w\$ "
+
+# JDK stuff for stateless_networks mac:
+export M2_HOME=/usr/local/apache-maven/apache-maven-3.2.3
+export M2=$M2_HOME/bin
+export PATH=$PATH:$M2
+#
+#export JAVA_HOME=/Library/Java/JavaVirtualMachines/jdk1.7.0_67.jdk/Contents/Home
+
+
+export EDITOR=`which emacs`
+
+bind 'set match-hidden-files off'
+export HISTCONTROL=ignoredups
+
+
+export ORIENTDB_HOME=/local/src/orientdb-community-1.7.9
+export REXSTER_HOME=/local/src/rexster/rexster-server

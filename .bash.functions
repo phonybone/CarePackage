@@ -1,7 +1,7 @@
 #-*-sh-*-
 
 function current_git_branch() {
-    br=`git branch 2>/dev/null | grep '^\*' | cut -f2 -d\  `
+    br=`git branch 2>/dev/null | grep '^\*' | cut -c3-`
     if [ "X$br" != "X" ] ; then
 	echo "git::${br}"
     else
@@ -130,4 +130,115 @@ function mvn-install() {
 
 function here() {
     cd `/bin/pwd`
+}
+
+function iphost() {
+    ifconfig | grep -A1 eth0 | tail -1 | cut -d: -f2 | cut -f1 -d\  
+}
+
+function unpack_rpm() {
+    rpm2cpio $1 | cpio -idmv
+}
+
+# refresh all git repos by pulling from origin/master
+function freshen() {
+    for i in $GIT_HOME/*; do
+        if [ -d $i -a -d $i/.git ]; then
+            ( cd $i && git fetch && git pull origin master )
+        fi
+    done
+}
+
+function current_venv() {
+    if [ -n "${VIRTUAL_ENV}" ]; then
+	basename ${VIRTUAL_ENV}
+    else
+	echo sys
+    fi
+}
+
+# switch to a particular venv:
+function venv() {
+    if [ -n "$1" ]; then
+	if [ ! -d ${VENVS_DIR}/$1 ]; then
+	   echo no such venv: $1
+	   return
+	fi
+    fi
+	 
+    if [ -n "$1" ]; then
+	source ${VENVS_DIR}/$1/bin/activate
+    fi
+    set_prompt
+}
+
+# create and start a new virtualenv:
+function create_venv() {
+    if [ -z "$1" ]; then
+	echo missing arg: virtual env name
+	return
+    fi
+    force=${2:-}
+    echo force: ${force}
+
+    if [ -d ${VENVS_DIR}/${1} ]; then
+	if [ "${force}" = "-f" ]; then # dumb way of handling opts
+	    rm_venv $1
+	else
+	    echo virtualenv ${1} already exists
+	    return
+	fi
+    fi
+    
+    pushd $VENVS_DIR
+    virtualenv $*
+    venv $1
+    my_activate $venv		# this effectively starts the virtual_env
+
+    pip_opts=('--trusted-host' 'devpi.sea0.luminusnetworks.com')
+    pip install --upgrade pip
+    pip install --trusted-host devpi.sea0.luminusnetworks.com ipython
+    pip install --trusted-host devpi.sea0.luminusnetworks.com pbr
+    popd
+}
+
+function my_activate() {
+    # see https://gist.github.com/datagrok/2199506
+    # type 'exit' instead of 'deactivate'
+    venv=$1
+    export VIRTUAL_ENV="${VENVS_DIR}/${venv}"
+    export PATH="${VIRTUAL_ENV}/bin:${PATH}"
+    # unset PYTHON_HOME
+
+}
+
+
+
+function rm_venv() {
+    if [ -z "$1" ]; then
+	echo missing arg: virtual env name
+	return
+    fi
+    echo removing $1...
+    rm -rf "${VENVS_DIR}/$1"
+    set_prompt
+}
+
+function venvs() {
+    ls ${VENVS_DIR}
+}
+
+function set_prompt() {
+    exit_code=$?
+    export PS1="\n\n[\h] {py::$(current_venv)} <\$(current_git_branch)> (${exit_code})\n \w \$ "
+}
+
+function rm_stale_dockers() {
+    # may warn if an image is in use, but no harm no foul
+    docker images | grep '<none>' | cut -c41-52 | xargs docker rmi {}
+}
+
+# ssh's:
+function saturn() {
+    ssh -p 3022 -X victor@127.0.0.1
 }

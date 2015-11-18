@@ -1,3 +1,21 @@
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment it out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+(package-initialize)
+
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment it out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+(package-initialize)
+
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment it out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+(package-initialize)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; File name: ` ~/.emacs '
 ;;; ---------------------
@@ -73,7 +91,7 @@
   ;; To avoid any trouble with the customization system of GNU emacs
   ;; we set the default file ~/.gnu-emacs-custom
   (setq custom-file "~/.gnu-emacs-custom")
-  (load "~/.gnu-emacs-custom" t t)
+;;  (load "~/.gnu-emacs-custom" t t)
 ;;;
 )
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -121,7 +139,9 @@
 (global-set-key [M-down] 'end-of-buffer)
 (global-set-key "\C-x'" 'next-error)
 (global-set-key "\C-c\t" 'auto-fill-mode)
+(global-set-key (kbd "C-:") 'comment-region)
 (set-variable 'scroll-step 0)
+(setq inhibit-flash-screen t)
 
 (fset 'remove-got-heres
    "\C-swarn \"got here\C-a\C-k\C-k")
@@ -133,7 +153,7 @@
 (scroll-bar-mode nil)
 (setq make-backup-files nil)
 (setq region-face 0)
-(global-font-lock-mode 0)
+(global-font-lock-mode 1)
 
 ;; attempt to load javascript mode:
 (autoload 'javascript-mode
@@ -182,29 +202,76 @@
 ;; Make searches case-insensitive
 (setq case-fold-search t)
 
+;; ------------------------------------------------------------------------
+;; SES (Simple SpreadSheets)
+;; ------------------------------------------------------------------------
+(add-to-list 'load-path "~/Dropbox/sandbox/emacs")
+(autoload 'ses-mode "ses/ses.el" "Spreadsheet mode" t)
+(add-to-list 'auto-mode-alist '("\\.ses$" . ses-mode))
+
+
+
 ;; -----------------------------------------------------------------------------
-;; Git support
+;; Git support: automatically supported in emacs 23.0
 ;; -----------------------------------------------------------------------------
-(load "/usr/share/doc/git-1.7.1/contrib/emacs/git.el")
-(load "/usr/share/doc/git-1.7.1/contrib/emacs/git-blame.el")
-(load "/usr/share/emacs/23.1/lisp/vc-git.elc")
+;;(load "/usr/share/doc/git-1.7.1/contrib/emacs/git.el")
+;;(load "/usr/share/doc/git-1.7.1/contrib/emacs/git-blame.el")
+;;(load "/usr/share/emacs/23.1/lisp/vc-git.elc")
 (add-to-list 'vc-handled-backends 'GIT)
 
+
+;; magit:
+;; need emacs 24 for (require), etc
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milbox.net/packages") t)
+(package-initialize)
+
+;; perl stuff
 (fset 'perl-moose-insert-has
    [?h ?a ?s ?  ?\' ?\' ?  ?= ?> ?\S-  ?\( ?i ?s ?= ?> ?\' ?r ?w ?\' ?, ?  ?i ?s ?a ?= ?> ?\' ?S ?t ?r ?\' ?\) ?\; ?\C-a right right right right right])
 (add-hook 'perl-mode-hook '(lambda() (local-set-key "\C-ch" 'perl-moose-insert-has)))
 
+;; python stuff
 (fset 'python-insert-warn
    "\C-iwarn(\"\" % ())\C-r\"\C-m")
-
-
 (add-hook 'python-mode-hook '(lambda() (local-set-key "\C-cw" 'python-insert-warn)))
+(load-file "/home/victor/Dropbox/sandbox/lisp/emacs/python.el")
 
 (transient-mark-mode 0)
 (setq inhibit-splash-screen t)
 
+;; Whenever a file changes on disk, update it's buffer.  Handy when you
+;; do a git checkout <branch>
+(global-auto-revert-mode)
+
 ;; Add error detection for maven errors, so C-x ` works as expected (we hope)
-(add-to-list 'compilation-error-regexp-alist 'maven)
-(add-to-list 'compilation-error-regexp-alist-alist
-       '(maven "\\[ERROR\\] \\(.+?\\):\\[\\([0-9]+\\),\\([0-9]+\\)\\].*"
-           1 2 3))
+;(add-to-list 'compilation-error-regexp-alist 'maven)
+;(add-to-list 'compilation-error-regexp-alist-alist
+;       '(maven "\\[ERROR\\] \\(.+?\\):\\[\\([0-9]+\\),\\([0-9]+\\)\\].*"
+;           1 2 3))
+
+;; see http://stackoverflow.com/questions/2429603/add-keyboard-binding-to-existing-emacs-mode
+;; for info about binding keys to macros.
+
+;; Save a macro to .emacs (this file!)
+;; Note: this appends to the end of this file, so manually appending
+(defun save-macro (name)                  
+    "save a macro. Take a name as argument
+     and save the last defined macro under 
+     this name at the end of your .emacs"
+     (interactive "SName of the macro :")  ; ask for the name of the macro    
+     (kmacro-name-last-macro name)         ; use this name for the macro    
+     (find-file user-init-file)            ; open ~/.emacs or other user init file 
+     (goto-char (point-max))               ; go to the end of the .emacs
+     (newline)                             ; insert a newline
+     (insert-kbd-macro name)               ; copy the macro 
+     (newline)                             ; insert a newline
+     (switch-to-buffer nil))               ; return to the initial buffer
+(fset 'python-insert-main
+   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([105 102 32 95 95 110 97 109 101 95 95 61 61 45 backspace 39 95 95 109 97 105 110 95 95 39 58 return tab 115 121 115 46 101 120 105 116 40 109 97 105 110 40 41 41 return] 0 "%d")) arg)))
+(add-hook 'python-mode-hook '(lambda() (local-set-key "\C-cm" 'python-insert-main)))
+
+
+(fset 'python-insert-print-dict
+   (lambda (&optional arg) "Keyboard macro." (interactive "p") (kmacro-exec-ring-item (quote ([M-backspace 15 tab 102 111 114 32 107 44 118 32 105 110 32 25 46 105 116 101 109 115 40 41 58 return tab 112 114 105 110 116 32 39 25 91 37 115 93 58 32 37 115 39 32 37 32 40 107 44 118 41] 0 "%d")) arg)))
+

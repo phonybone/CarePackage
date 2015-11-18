@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+#-*-python-*-
+import sys
+from pbr.version import VersionInfo
+print VersionInfo(sys.argv[1])

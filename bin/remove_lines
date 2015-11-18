@@ -1,0 +1,22 @@
+#!/bin/bash
+
+
+backups=''
+if [ "$1" == "-bak" ]; then
+   echo making backups
+   backups=1
+   shift
+fi
+
+pattern=$1
+shift
+
+for fn in $*
+do
+	if [ $backups==1 ]; then
+	   echo backing up $fn
+	   cp $fn $fn.bak
+	fi
+	grep -v $pattern $fn > $fn.tmp
+	mv $fn.tmp $fn
+done

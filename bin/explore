@@ -1,0 +1,40 @@
+#!/usr/bin/env python
+#-*-python-*-
+
+'''
+Recursive descend a directory structure, showing a structured
+view of all files and directories found.
+'''
+import sys
+import os
+import re
+
+def main(opts):
+    for dirpath, dirnames, files in os.walk(opts.root):
+        blanks_dir=re.sub(r'[^/]', ' ', dirpath)
+        print dirpath
+        for file in files:
+            print '{}/{}'.format(blanks_dir, file)
+        if opts.ignore_dots:
+            for dot_dir in [d for d in dirnames if d.startswith('.')]:
+                dirnames.remove(dot_dir)
+
+
+    return 0
+
+def getopts():
+    import argparse
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('root', nargs='?', default='.')
+    parser.add_argument('--ignore_dots', action='store_false', default=True, help='ignore .dirs')
+    parser.add_argument('-d', action='store_true', help='debugging flag')
+
+    opts=parser.parse_args()
+    if opts.d:
+        print opts
+    return opts
+
+
+if __name__=='__main__':
+    sys.exit(main(getopts()))
+

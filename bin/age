@@ -1,0 +1,26 @@
+#!/usr/bin/env perl
+#-*-perl-*-
+use strict;
+use warnings;
+
+use lib '/home/victor/Dropbox/sandbox/perl';
+use PhonyBone::TimeUtilities qw(duration);
+
+my @report;
+my $longest=0;
+my $now=time;
+
+foreach my $fn (@ARGV) {
+    my $mtime=(stat($fn))[9];
+    if (! $mtime) {
+	next;
+    }
+    my $age=$now-$mtime;
+    push @report, [$fn, duration($age)];
+    $longest = length($fn)>$longest? length($fn) : $longest;
+}
+
+my $format=sprintf("%%-%us\t%%s\n", $longest+2);
+foreach my $line (@report) {
+    printf($format, @$line);
+}

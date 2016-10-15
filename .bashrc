@@ -5,9 +5,25 @@
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
-# don't put duplicate lines or lines starting with space in the history.
-# See bash(1) for more options
-HISTCONTROL=ignoreboth
+# source other files:
+files=( "/etc/bashrc" "${HOME}/.bash.aliases" "${HOME}/.bash.functions" "${HOME}/.bashrc.local" "${HOME}/.bash.aws" )
+for file in "${files[@]}"; do 
+  if [ -f $file ]; then
+    . $HOME/$file
+  fi
+done
+
+
+export CDPATH=.:$HOME
+set cdpath=$HOME
+
+export PS1="[\h] <\$(current_git_branch)> ($?) \w\$ "
+
+
+export EDITOR=`which emacs`
+
+bind 'set match-hidden-files off'
+export HISTCONTROL=ignoreboth
 
 # append to the history file, don't overwrite it
 shopt -s histappend

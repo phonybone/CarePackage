@@ -2,19 +2,14 @@
 ;; installed packages.  Don't delete this line.  If you don't want it,
 ;; just comment it out by adding a semicolon to the start of the line.
 ;; You may delete these explanatory comments.
-(package-initialize)
 
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
-(package-initialize)
 
-;; Added by Package.el.  This must come before configurations of
-;; installed packages.  Don't delete this line.  If you don't want it,
-;; just comment it out by adding a semicolon to the start of the line.
-;; You may delete these explanatory comments.
 (package-initialize)
+(setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
+                         ("marmalade" . "https://marmalade-repo.org/packages/")
+                         ("melpa-stable" . "https://melpa.org/packages/")))
+
+(require 'package)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; File name: ` ~/.emacs '
@@ -142,6 +137,12 @@
 (global-set-key (kbd "C-:") 'comment-region)
 (set-variable 'scroll-step 0)
 (setq inhibit-flash-screen t)
+(tool-bar-mode -1)
+(menu-bar-mode -1)
+(global-linum-mode t)
+
+(add-to-list 'default-frame-alist
+	     '(font . "-unknown-Ubuntu Mono-normal-normal-normal-*-12-*-*-*-m-0-iso10646-1"))
 
 (fset 'remove-got-heres
    "\C-swarn \"got here\C-a\C-k\C-k")
@@ -150,7 +151,7 @@
 (global-set-key [home]   'beginning-of-buffer) 
 (global-set-key [end]    'end-of-buffer) 
 
-(scroll-bar-mode nil)
+(scroll-bar-mode -1)
 (setq make-backup-files nil)
 (setq region-face 0)
 (global-font-lock-mode 1)
@@ -184,17 +185,14 @@
 ;(setq default-major-mode 'Text-mode)
 
 ; Attempt to load JDE stuff:
-(setq load-path
-      (nconc
-       '(
-	 "/Local/Users/victor/Library/OpenUp/jde_2_1_5-2_1_6beta13_orig_0/jde-2.1.6beta13/lisp"
-	 )
-       load-path))
+;; (setq load-path
+;;       (nconc
+;;        '(
+;; 	 "/Local/Users/victor/Library/OpenUp/jde_2_1_5-2_1_6beta13_orig_0/jde-2.1.6beta13/lisp"
+;; 	 )
+;;        load-path))
 
 ;(require 'jde)
-
-;; org-mode
-(setq load-path (cons "/users/vcassen/software/org-6.28e/lisp" load-path))
 
 ;; load personal macros (needs a check for the existance of the file)
 ;;(load '.emacs-macros)
@@ -222,9 +220,7 @@
 
 ;; magit:
 ;; need emacs 24 for (require), etc
-(require 'package)
-(add-to-list 'package-archives '("melpa" . "http://melpa.milbox.net/packages") t)
-(package-initialize)
+;;(add-to-list 'package-archives '("melpa" . "http://melpa.milbox.net/packages") t)
 
 ;; perl stuff
 (fset 'perl-moose-insert-has
@@ -232,6 +228,11 @@
 (add-hook 'perl-mode-hook '(lambda() (local-set-key "\C-ch" 'perl-moose-insert-has)))
 
 ;; python stuff
+(require 'python)
+;;(require 'ipython)
+(setq python-shell-interpreter "ipython"
+      python-shell-interpreter-args "-i")
+
 (fset 'python-insert-warn
    "\C-iwarn(\"\" % ())\C-r\"\C-m")
 (add-hook 'python-mode-hook '(lambda() (local-set-key "\C-cw" 'python-insert-warn)))
@@ -243,6 +244,17 @@
 ;; Whenever a file changes on disk, update it's buffer.  Handy when you
 ;; do a git checkout <branch>
 (global-auto-revert-mode)
+
+;; google-this:
+(require 'google-this)
+(google-this-mode 1)
+
+(require 'cedet)
+;; (semantic-load-enable-minimum-features) ;; or enable more if you wish
+;; (require 'malabar-mode)
+;; (setq malabar-groovy-lib-dir "/path/to/malabar/lib")
+;; (add-to-list 'auto-mode-alist '("\\.java\\'" . malabar-mode))
+
 
 ;; Add error detection for maven errors, so C-x ` works as expected (we hope)
 ;(add-to-list 'compilation-error-regexp-alist 'maven)

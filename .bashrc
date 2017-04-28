@@ -6,10 +6,10 @@
 [ -z "$PS1" ] && return
 
 # source other files:
-files=( "/etc/bashrc" "${HOME}/.bash.aliases" "${HOME}/.bash.functions" "${HOME}/.bashrc.local" "${HOME}/.bash.aws" )
+files=( "/etc/bashrc" "${HOME}/.bashrc.local" "${HOME}/.bash.aliases" "${HOME}/.bash.functions" "${HOME}/.bash.aws" )
 for file in "${files[@]}"; do 
   if [ -f $file ]; then
-    . $HOME/$file
+    . $file
   fi
 done
 
@@ -87,8 +87,8 @@ esac
 
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=auto'
+    #test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+    #alias ls='ls --color=auto'
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
 
@@ -100,7 +100,6 @@ fi
 # some more ls aliases
 alias ll='ls -alF'
 alias la='ls -A'
-alias l='ls -CF'
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
@@ -122,13 +121,6 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
     . /etc/bash_completion
 fi
 
-if [ -f $HOME/.bashrc.local ]; then
-  . $HOME/.bashrc.local
-fi
-
-if [ -f $HOME/.bash.functions ]; then
-  . $HOME/.bash.functions
-fi
 
 set_prompt
 if [ "$(current_venv)" = "sys" ]; then
@@ -138,3 +130,8 @@ fi
 
 export EDITOR=`which emacs`
 
+
+
+#THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
+export SDKMAN_DIR="/home/victor/.sdkman"
+[[ -s "/home/victor/.sdkman/bin/sdkman-init.sh" ]] && source "/home/victor/.sdkman/bin/sdkman-init.sh"

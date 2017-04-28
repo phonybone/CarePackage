@@ -12,27 +12,19 @@ alias psless='ps -auxww | less'
 alias l='less -X'
 alias so=source
 
-#if [ -z ${DISPLAY} ]; then
-#  alias e='nohup emacs -geometry 140x71+616+0 -font 6x13 \!* &'
-#else
-#  alias e='emacs -nw \!* '
-#fi
-#alias ec='~/bin/eclipse/eclipse/eclipse >& /dev/null &'
 
-#alias lpr='lpr -Php -p'
 alias ftp='ftp -i'
 alias du='du -h'
 
-alias pnwmom='ssh pnwmomor@pnwmom.org'		# pwd: Moto1
-alias bobama='ssh vcassen@bobama'
-alias moonraker='ssh vcassen@moonraker'
-alias virtus='ssh vcassen@virtus'
-alias aegir='ssh vcassen@aegir'
-alias cocoa='ssh victor@cocoa.igb.uiuc.edu'
-alias cocoa_tunnel='ssh -D 9999 -N victor@cocoa.igb.uiuc.edu'
-# then: firefox->edit->prefrences->advanced->network->settings: manual proxy configuration, SOCKS host, 127.0.0.1, port 9999
+# cynvenio SSH's:
+alias cynvenio="ssh everest@${CYNVENIO_DEV_BOX_IP-24.43.144.189}"
+alias storm="ssh victor@storm.victorcassen.com"
+alias everest5="ssh everest@${EVEREST5}"
+alias everest6="ssh everest@${EVEREST6}"
+alias tencent="ssh root@${TENCENT}"
+alias 'aws-micro'="ssh -i ${HOME}/.ssh/Everest-aws.pem ec2-user@ec2-52-38-86-11.us-west-2.compute.amazonaws.com"
+alias 'aws-large'="ssh -i ${HOME}/.ssh/Everest-aws.pem ec2-user@ec2-54-70-180-87.us-west-2.compute.amazonaws.com"
 
-alias devserver='ssh gdxbase.cimr.cam.ac.uk'
 alias dict='l /usr/share/dict/words'
 #alias xterm='xterm \!* -e tcsh'
 
@@ -79,5 +71,4 @@ alias antrun='ant -Dmain_class=\!:1 run'
 alias mongo_start='mongod --fork --dbpath /mnt/price1/vcassen/mongo_dbs/ --logpath /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log --logappend --port 27017; tail -f /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log'
 alias mongo_start_dist='mongod --fork --dbpath /mnt/price1/vcassen/mongo_dbs/ --logpath /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log --logappend --replSet geo --port 27017; tail -f /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log'
 
-alias 'aws-micro'="ssh -i ${HOME}/Dropbox/AWS/micro_kp.pem ec2-user@ec2-50-17-110-122.compute-1.amazonaws.com"
 

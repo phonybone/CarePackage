@@ -1,7 +1,16 @@
 #-*-sh-*-
+function set_prompt() {
+    exit_code=$?
+    export PS1="\n\n[\h] {py::$(current_venv)} <\$(current_git_branch)> (${exit_code})\n \w \$ "
+}
+
+function rm_stale_dockers() {
+    # may warn if an image is in use, but no harm no foul
+    docker images | grep '<none>' | cut -c41-52 | xargs docker rmi {}
+}
 
 function current_git_branch() {
-    br=`git branch 2>/dev/null | grep '^\*' | cut -c3-`
+    br=`git branch 2>/dev/null | grep '^\*' | cut -f2 -d\  `
     if [ "X$br" != "X" ] ; then
 	echo "git::${br}"
     else
@@ -65,20 +74,14 @@ function upto() {
     fi
 }
 
-function blah() {
-    a=(this that these those)
-    for ((i=${#a[@]}-1; i>=0; i--))
-    do
-        echo a $i ${a[$i]}
-    done
-}
 
 # mvn-create $groupId $artifactId $version
 # mvn-create $groupId $artifactId (version defaults to 0.01)
 # mvn-create $artifactId (like above, and groupId defaults to org.sysbiology)
+# EG mvn-create <some_project>
 function mvn-create() {
     if [ $# -eq 1 ]; then
-	groupId='org.systemsbiology'
+	groupId='com.phonybone'
         artifactId=$1
         version=0.01
     elif [ $# -eq 2 ]; then
@@ -100,10 +103,27 @@ function mvn-create() {
     fi
 
     mvn archetype:generate \
-	-DarchetypeGroupId=org.apache.maven.archetypes \
-	-DgroupId=$groupId \
-	-DartifactId=$artifactId \
-        -Dversion=$version
+	-DarchetypeGroupId=com.victorcassen \
+	-DarchetypeArtifactId=quick-start \
+	-DarchetypeVersion=1.0 \
+	-DgroupId=${groupId} \
+	-DartifactId=${artifactId} \
+	-Dversion=${version} \
+	-B
+    
+    # old version using quickstart; now we use our own archetype (above)
+    # mvn archetype:generate \
+    # 	-DarchetypeArtifactId=maven-archetype-quickstart \
+    # 	-DinteractiveMode=false \
+    # 	-DgroupId=$groupId \
+    # 	-DartifactId=$artifactId \
+    #     -Dversion=$version
+}
+
+# maven shortcuts:
+# run one test class; recompile everything first
+function mtest() {
+    mvn compile compiler:testCompile surefire:test -Dtest=${1}
 }
 
 # run a jar:
@@ -130,23 +150,6 @@ function mvn-install() {
 
 function here() {
     cd `/bin/pwd`
-}
-
-function iphost() {
-    ifconfig | grep -A1 eth0 | tail -1 | cut -d: -f2 | cut -f1 -d\  
-}
-
-function unpack_rpm() {
-    rpm2cpio $1 | cpio -idmv
-}
-
-# refresh all git repos by pulling from origin/master
-function freshen() {
-    for i in $GIT_HOME/*; do
-        if [ -d $i -a -d $i/.git ]; then
-            ( cd $i && git fetch && git pull origin master )
-        fi
-    done
 }
 
 function current_venv() {
@@ -191,14 +194,15 @@ function create_venv() {
     fi
     
     pushd $VENVS_DIR
-    virtualenv $*
+    virtualenv $* --python=/usr/local/lib/python2.7.10/bin/python
     venv $1
     my_activate $venv		# this effectively starts the virtual_env
 
     pip_opts=('--trusted-host' 'devpi.sea0.luminusnetworks.com')
     pip install --upgrade pip
-    pip install --trusted-host devpi.sea0.luminusnetworks.com ipython
-    pip install --trusted-host devpi.sea0.luminusnetworks.com pbr
+    pip install --upgrade wheel
+    pip install -U --trusted-host devpi.sea0.luminusnetworks.com ipython
+    pip install -U --trusted-host devpi.sea0.luminusnetworks.com pbr
     popd
 }
 
@@ -228,17 +232,15 @@ function venvs() {
     ls ${VENVS_DIR}
 }
 
-function set_prompt() {
-    exit_code=$?
-    export PS1="\n\n[\h] {py::$(current_venv)} <\$(current_git_branch)> (${exit_code})\n \w \$ "
+function work_remote_luminus() {
+    cd /etc/openvpn
+    sudo openvpn --up update-resolv-conf --config config.conf  --script-security 2
 }
 
-function rm_stale_dockers() {
-    # may warn if an image is in use, but no harm no foul
-    docker images | grep '<none>' | cut -c41-52 | xargs docker rmi {}
+function scp_cynvenio() {
+    scp "$@" everest@${CYNVENTION_DEV_BOX_IP-24.43.144.189}:
 }
 
-# ssh's:
-function saturn() {
-    ssh -p 3022 -X victor@127.0.0.1
+function nocomments () {
+    grep -v '^#' $1 | grep -v '^$'
 }

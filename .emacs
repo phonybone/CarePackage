@@ -5,11 +5,11 @@
 
 
 (package-initialize)
+(require 'package)
 (setq package-archives '(("gnu" . "https://elpa.gnu.org/packages/")
                          ("marmalade" . "https://marmalade-repo.org/packages/")
                          ("melpa-stable" . "https://melpa.org/packages/")))
 
-(require 'package)
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ;;; File name: ` ~/.emacs '
@@ -264,6 +264,11 @@
 
 ;; see http://stackoverflow.com/questions/2429603/add-keyboard-binding-to-existing-emacs-mode
 ;; for info about binding keys to macros.
+
+;;(add-to-list 'default-frame-alist '(font . "Input Mono Bold-12" ))
+
+(setq python-shell-interpreter "/home/victor/.virtualenvs/gui_service/bin/ipython"
+      python-shell-interpreter-args "-i")
 
 ;; Save a macro to .emacs (this file!)
 ;; Note: this appends to the end of this file, so manually appending

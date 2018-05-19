@@ -176,7 +176,8 @@ function venv() {
 }
 
 # create and start a new virtualenv:
-
+# depends on existance of $PYTHON2 and $PYTHON3, set in .bashrc.local
+# Can't just use `which python2`, because that could be set by virtual env
 function create_venv() {
     venv_name=$1
     if [ -z "$venv_name" ]; then
@@ -187,10 +188,10 @@ function create_venv() {
     py_vers=${2-py2}
     case ${py_vers} in
 	py2)
-	    python_exe=$python2
+	    python_exe=$PYTHON2
 	    ;;
 	py3)
-	    python_exe=$python3
+	    python_exe=$PYTHON3
 	    ;;
 	*)
 	    echo unknown python: $py_vers

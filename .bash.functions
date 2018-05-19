@@ -176,8 +176,6 @@ function venv() {
 }
 
 # create and start a new virtualenv:
-python2=/usr/local/lib/python2.7.10/bin/python
-python3=/usr/bin/python3
 
 function create_venv() {
     venv_name=$1
@@ -275,8 +273,11 @@ function link_latest () {
 function flask_here() {
     # work on the flask app rooted in this directory
     export PYTHONPATH=`pwd`
-    app_fn=$(find . -name app.py) | cut -c3-
+    app_fn=$(find . -name app.py | cut -c3-)
     export FLASK_APP=${app_fn}
+
+    echo PYTHONPATH: $PYTHONPATH
+    echo FLASK_APP: $FLASK_APP
 }
 
 function ev_branches() {

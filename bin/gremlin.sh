@@ -1,1 +1,0 @@
-/local/src/gremlin-groovy-2.5.0/bin/gremlin.sh

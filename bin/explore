@@ -12,7 +12,7 @@ import os
 import re
 
 def main(opts):
-    if 'EXPLORE_IGNORE' in os.environ:
+    if 'EXPLORE_IGNORE' in os.environ and not opts.all:
         ignore_rx = re.compile(os.environ['EXPLORE_IGNORE'])
     else:
         ignore_rx = re.compile(r'(?!)') # never matches; see https://stackoverflow.com/questions/1723182/a-regex-that-will-never-be-matched-by-anything
@@ -46,6 +46,7 @@ def getopts():
     parser.add_argument('-d', action='store_true', help='debugging flag')
     parser.add_argument('-f', '--full-paths', help='show full paths', action='store_true')
     parser.add_argument('-s', '--structure-only', help='only show directory structure', action='store_true')
+    parser.add_argument('-a', '--all', help='display all paths regardless of ${EXPLORE_IGNORE}', action='store_true', default=False)
     # parser.add_argument('-i', action='append', help='ignore paths containing', default=[])
 
     opts=parser.parse_args()

@@ -1,0 +1,64 @@
+#-*-sh-*-
+
+# Cynvenio stuff:
+export CYN=${CYNVENIO_DEV_BOX_IP} # shorthand
+export TENCENT=118.89.18.65
+export AWS_LARGE=54.70.180.87
+export SPIKE_IP=192.168.0.34
+export MAVEN_GROUP_ID=com.victorcassen
+
+# Everest stuff:
+export everest=/usr/local/everest
+export amplicons=${everest}/data/setup/Amplicon
+export AMPLICON207=${amplicons}/CHP2.20131001/CHP2.20131001.fa
+export AMPLICON621=${amplicons}/CYNVENIO_021516/CYNVENIO_021516.fa
+
+function at_cyn_p {
+    wlan0_bcast=$(ifconfig wlan0 | grep 'inet addr'  | cut -c43-56)
+    echo wlan0_bcast ${wlan0_bcast}
+    if [ "$wlan0_bcast" == '10.100.255.255' ]; then
+	at_cynvenio_office=YES
+    else
+	at_cynvenio_office=NO
+    fi
+    echo at Cynvenio office $at_cynvenio_office
+    if [ $at_cynvenio_office == 'NO' ]; then
+	export CYNVENIO_DEV_BOX_IP=24.43.144.189
+	export EVEREST5=24.43.144.183
+	export EVEREST6=24.43.144.182
+    else
+	export CYNVENIO_DEV_BOX_IP=10.100.100.134
+	export EVEREST5=10.100.100.111
+	export EVEREST6=10.100.100.113
+    fi
+}
+
+
+function work_remote_luminus() {
+    cd /etc/openvpn
+    sudo openvpn --up update-resolv-conf --config config.conf  --script-security 2
+}
+
+function scp_cynvenio() {
+    scp "$@" everest@${CYNVENTION_DEV_BOX_IP-24.43.144.189}:
+}
+
+function link_latest () {
+    # chomper utility function; link to most recently modified file in this directory:
+    rm -f latest
+    ls -t | grep -v total | head -1 | xargs -I{} ln -s {} latest
+    file latest
+}
+
+
+function ev_branches() {
+    # display the current git branch on each of the Everest projects
+    pushd /usr/local/everest/software/base/bin/Everest >/dev/null
+    for proj in $(ls); do
+	pushd $proj >/dev/null
+	branch=$(git branch | grep \* | cut -c2-)
+	printf "%-32s: %s\n" $proj $branch
+	popd >/dev/null
+    done
+    popd >/dev/null
+}

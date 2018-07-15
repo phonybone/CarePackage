@@ -1,0 +1,4 @@
+#-*-sh-*-
+function pylint_tests() {
+	 explore -f tests | grep '\.py$' | xargs pylint --rcfile pylintrc | l
+}

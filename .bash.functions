@@ -1,9 +1,4 @@
 #-*-sh-*-
-function set_prompt() {
-    exit_code=$?
-    export PS1="\n\n[\h] {py::$(current_venv)} <\$(current_git_branch)> (${exit_code})\n \w \$ "
-}
-
 function rm_stale_dockers() {
     # may warn if an image is in use, but no harm no foul
     docker images | grep '<none>' | cut -c41-52 | xargs docker rmi {}
@@ -12,10 +7,15 @@ function rm_stale_dockers() {
 function current_git_branch() {
     br=`git branch 2>/dev/null | grep '^\*' | cut -f2 -d\  `
     if [ "X$br" != "X" ] ; then
-	echo "git::${br}"
+	echo ${br}
     else
 	echo
     fi
+}
+
+function set_prompt() {
+    exit_code=$?
+    export PS1='\n\n[\h] {py::$(current_venv)} <$(current_git_branch)> (${exit_code})\n \w \$ '
 }
 
 # find all perl subs in a file
@@ -291,4 +291,13 @@ function ev_branches() {
 	popd >/dev/null
     done
     popd >/dev/null
+}
+
+function gng() {
+    # grep-no-grep: look for something with grep, but exclude something else with grep
+    # $1: flags to grep
+    # $2: search pattern for grep
+    # $3: what to search
+    # $4: search pattern to exclude
+    grep $1 -e $2 $3 | grep -v $4
 }

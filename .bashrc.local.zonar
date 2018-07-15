@@ -1,0 +1,35 @@
+#-*-bash-*-
+PG_BIN="/Applications/Postgres.app/Contents/Versions/9.6/bin"
+
+alias psql="${PG_BIN}/psql -U postgres"
+
+export PSQL_RB_PORT=5434
+export PSQL_MP_PORT=5433
+export PSQL_GTC_PORT=5435
+
+alias psql_rb="${PG_BIN}/psql -U postgres -h localhost -p ${PSQL_RB_PORT} route_board"
+alias psql_mp="${PG_BIN}/psql -U postgres  -h localhost -p ${PSQL_MP_PORT} master_plan"
+alias psql_gtc="${PG_BIN}/psql -U postgres  -h localhost -p ${PSQL_GTC_PORT}"
+
+export SQLALCHEMY_DATABASE_URI_RB="postgres://postgress:password@localhost:${PSQL_RB_PORT}/route_board"
+export SQLALCHEMY_DATABASE_URI_MP="postgres://postgress:password@localhost:${PSQL_MP_PORT}/route_board"
+export SQLALCHEMY_DATABASE_URI_GTC="postgres://postgress:password@localhost:${PSQL_GTC_PORT}/route_board"
+
+function use_db() {
+    case $1 in
+	rb)
+	    export SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI_RB}
+	    ;;
+	mp)
+	    export SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI_MP}
+	    ;;
+	gtc)
+	    export SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI_GTC}
+	    ;;
+	*)
+	    echo bad/missing db
+	    return 1
+   esac
+    echo $SQLALCHEMY_DATABASE_URI
+}
+       

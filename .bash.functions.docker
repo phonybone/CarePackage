@@ -1,0 +1,10 @@
+#-*-sh-*-
+
+function rmis() {
+    docker image ls -a | perl -ane 'print "$F[2]\n";' | parallel docker image rm
+}
+
+function rmcs {
+    docker container ls -a | cut -f1 -d\ | grep -v CONTAINER | parallel docker container rm
+}
+

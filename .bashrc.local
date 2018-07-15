@@ -1,0 +1,28 @@
+export PATH="$PATH:${HOME}/bin"
+
+export PYTHON2=/usr/local/bin/python
+export PYTHON3=/usr/local/bin/python3
+export DEFAULT_VENV=vpy3
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+export VENVS_DIR=${HOME}/.virtualenvs
+export SYS_IPYTHON=/Library/Frameworks/Python.framework/Versions/2.7/bin/ipython
+
+export ANSIBLE_VAULT_PASSWORD_FILE=${HOME}/.ansible_vault_password
+
+venv ${DEFAULT_VENV}
+
+export EXPLORE_IGNORE='\.pyc$|__pycache__'
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/victor.cassen/google-cloud-sdk/path.bash.inc' ]; then source '/Users/victor.cassen/google-cloud-sdk/path.bash.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/victor.cassen/google-cloud-sdk/completion.bash.inc' ]; then source '/Users/victor.cassen/google-cloud-sdk/completion.bash.inc'; fi
+
+# CPAN adds this for [local::lib]:
+PATH="/Users/victor.cassen/perl5/bin${PATH:+:${PATH}}"; export PATH;
+PERL5LIB="/Users/victor.cassen/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
+PERL_LOCAL_LIB_ROOT="/Users/victor.cassen/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"/Users/victor.cassen/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=/Users/victor.cassen/perl5"; export PERL_MM_OPT;
+

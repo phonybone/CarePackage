@@ -32,6 +32,10 @@ for file in "${files[@]}"; do
 done
 
 
+for file in ${HOME}/.bashrc.local.*; do
+    . $file
+done
+
 
 
 

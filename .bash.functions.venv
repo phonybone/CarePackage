@@ -3,6 +3,13 @@
 # create and start a new virtualenv:
 # depends on existance of $PYTHON2 and $PYTHON3, set in .bashrc.local
 # Can't just use `which python2`, because that could be set by virtual env
+export PYTHON2=/usr/local/bin/python2.7
+export PYTHON3=/usr/local/bin/python3.6
+export DEFAULT_VENV=vpy3
+export VIRTUAL_ENV_DISABLE_PROMPT=1
+export VENVS_DIR=${HOME}/.virtualenvs
+export SYS_IPYTHON=/Library/Frameworks/Python.framework/Versions/2.7/bin/ipython
+
 function create_venv() {
     venv_name=$1
     if [ -z "$venv_name" ]; then
@@ -45,4 +52,53 @@ function create_venv() {
     pip install --upgrade ipython
     pip install --upgrade pbr
     popd
+}
+
+function current_venv() {
+    if [ -n "${VIRTUAL_ENV}" ]; then
+	basename ${VIRTUAL_ENV}
+    else
+	echo sys
+    fi
+}
+
+# switch to a particular venv:
+function venv() {
+    if [ -n "$1" ]; then
+	if [ ! -d ${VENVS_DIR}/$1 ]; then
+	   echo no such venv: $1
+	   return
+	fi
+    fi
+	 
+    if [ -n "$1" ]; then
+	source ${VENVS_DIR}/$1/bin/activate
+    fi
+    set_prompt
+}
+
+function my_activate() {
+    # see https://gist.github.com/datagrok/2199506
+    # type 'exit' instead of 'deactivate'
+    venv=$1
+    export VIRTUAL_ENV="${VENVS_DIR}/${venv}"
+    export PATH="${VIRTUAL_ENV}/bin:${PATH}"
+    # unset PYTHON_HOME
+
+}
+
+
+
+function rm_venv() {
+    if [ -z "$1" ]; then
+	echo missing arg: virtual env name
+	return
+    fi
+    echo removing $1...
+    rm -rf "${VENVS_DIR}/$1"
+    set_prompt
+}
+
+function venvs() {
+    ls ${VENVS_DIR}
 }

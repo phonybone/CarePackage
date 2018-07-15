@@ -50,7 +50,6 @@ function upto() {
     for i in $start_dir
     do
 	a[$j]=$i
-#	$debug " set item $j, ${a[$j]}"
 	j=$(( j+1 ))
     done
 
@@ -59,7 +58,6 @@ function upto() {
 
     for ((i=${#a[@]}-1; i>=0; i--))
     do
-#	echo ${a[$i]} = $target \?
 	if [ "${a[$i]}" = "$target" ]; then
 	    yay=1;
 	    break;
@@ -69,68 +67,10 @@ function upto() {
     unset a			# otherwise it mucks up the next call to upto
 
     if [ $yay -eq 0 ]; then
-#	echo darn
 	builtin cd $start_dir
     fi
 }
 
-
-# mvn-create $groupId $artifactId $version
-# mvn-create $groupId $artifactId (version defaults to 0.01)
-# mvn-create $artifactId (like above, and groupId defaults to org.sysbiology)
-# EG mvn-create <some_project>
-function mvn-create() {
-    if [ $# -eq 1 ]; then
-	groupId='com.phonybone'
-        artifactId=$1
-        version=0.01
-    elif [ $# -eq 2 ]; then
-        groupId=$1
-	artifactId=$2
-        version=0.01
-    elif [ $# -eq 3 ]; then
-	groupId=$1
-	artifactId=$2
-	version=$3
-    else
-        echo usage $0 '[groupId]' '<artifactId>' '[version]'
-        return
-    fi
-
-    if [ -z $artifactId ]; then
-        echo artifactId not set
-	return 
-    fi
-
-    mvn archetype:generate \
-	-DarchetypeGroupId=com.victorcassen \
-	-DarchetypeArtifactId=quick-start \
-	-DarchetypeVersion=1.0 \
-	-DgroupId=${groupId} \
-	-DartifactId=${artifactId} \
-	-Dversion=${version} \
-	-B
-    
-    # old version using quickstart; now we use our own archetype (above)
-    # mvn archetype:generate \
-    # 	-DarchetypeArtifactId=maven-archetype-quickstart \
-    # 	-DinteractiveMode=false \
-    # 	-DgroupId=$groupId \
-    # 	-DartifactId=$artifactId \
-    #     -Dversion=$version
-}
-
-# maven shortcuts:
-# run one test class; recompile everything first
-function mtest() {
-    mvn compile compiler:testCompile surefire:test -Dtest=${1}
-}
-
-# run a jar:
-# mvn-run $main_class [$arg1 $arg2 ...]
-function mvn-run() {
-    mvn exec:java -Dexec.mainClass="$1" -Dexec.args="${@:2}"
-}
 
 # Call mvn install:install-file to the local .m2 repo:
 function mvn-install() {
@@ -152,123 +92,10 @@ function here() {
     cd `/bin/pwd`
 }
 
-function current_venv() {
-    if [ -n "${VIRTUAL_ENV}" ]; then
-	basename ${VIRTUAL_ENV}
-    else
-	echo sys
-    fi
-}
 
-# switch to a particular venv:
-function venv() {
-    if [ -n "$1" ]; then
-	if [ ! -d ${VENVS_DIR}/$1 ]; then
-	   echo no such venv: $1
-	   return
-	fi
-    fi
-	 
-    if [ -n "$1" ]; then
-	source ${VENVS_DIR}/$1/bin/activate
-    fi
-    set_prompt
-}
-
-# create and start a new virtualenv:
-# depends on existance of $PYTHON2 and $PYTHON3, set in .bashrc.local
-# Can't just use `which python2`, because that could be set by virtual env
-function create_venv() {
-    venv_name=$1
-    if [ -z "$venv_name" ]; then
-	echo missing arg: virtual env name
-	return
-    fi
-
-    py_vers=${2-py2}
-    case ${py_vers} in
-	py2)
-	    python_exe=$PYTHON2
-	    ;;
-	py3)
-	    python_exe=$PYTHON3
-	    ;;
-	*)
-	    echo unknown python: $py_vers
-	    return
-	    ;;
-    esac
-    
-
-    if [ -d ${VENVS_DIR}/${venv_name} ]; then
-	# if [ "${force}" = "-f" ]; then # dumb way of handling opts
-	#     rm_venv $1
-	# else
-	echo virtualenv ${venv_name} already exists
-	return
-	# fi
-    fi
-    
-
-    pushd $VENVS_DIR
-    virtualenv --python=${python_exe} ${venv_name}
-    venv ${venv_name}	     # see above
-    my_activate $venv_name   # this effectively starts the virtual_env
-
-    # pip_opts=('--trusted-host' 'devpi.sea0.luminusnetworks.com')
-    pip install --upgrade pip
-    pip install --upgrade wheel
-    pip install --upgrade ipython
-    pip install --upgrade pbr
-    # pip install -U --trusted-host devpi.sea0.luminusnetworks.com ipython
-    # pip install -U --trusted-host devpi.sea0.luminusnetworks.com pbr
-    popd
-}
-
-function my_activate() {
-    # see https://gist.github.com/datagrok/2199506
-    # type 'exit' instead of 'deactivate'
-    venv=$1
-    export VIRTUAL_ENV="${VENVS_DIR}/${venv}"
-    export PATH="${VIRTUAL_ENV}/bin:${PATH}"
-    # unset PYTHON_HOME
-
-}
-
-
-
-function rm_venv() {
-    if [ -z "$1" ]; then
-	echo missing arg: virtual env name
-	return
-    fi
-    echo removing $1...
-    rm -rf "${VENVS_DIR}/$1"
-    set_prompt
-}
-
-function venvs() {
-    ls ${VENVS_DIR}
-}
-
-function work_remote_luminus() {
-    cd /etc/openvpn
-    sudo openvpn --up update-resolv-conf --config config.conf  --script-security 2
-}
-
-function scp_cynvenio() {
-    scp "$@" everest@${CYNVENTION_DEV_BOX_IP-24.43.144.189}:
-}
 
 function nocomments () {
     grep -v '^#' $1 | grep -v '^$'
-}
-
-function link_latest () {
-    # chomper utility function; link to most recently modified file in this directory:
-    rm -f latest
-    ls -t | grep -v total | head -1 | xargs -I{} ln -s {} latest
-    file latest
 }
 
 function flask_here() {
@@ -281,23 +108,3 @@ function flask_here() {
     echo FLASK_APP: $FLASK_APP
 }
 
-function ev_branches() {
-    # display the current git branch on each of the Everest projects
-    pushd /usr/local/everest/software/base/bin/Everest >/dev/null
-    for proj in $(ls); do
-	pushd $proj >/dev/null
-	branch=$(git branch | grep \* | cut -c2-)
-	printf "%-32s: %s\n" $proj $branch
-	popd >/dev/null
-    done
-    popd >/dev/null
-}
-
-function gng() {
-    # grep-no-grep: look for something with grep, but exclude something else with grep
-    # $1: flags to grep
-    # $2: search pattern for grep
-    # $3: what to search
-    # $4: search pattern to exclude
-    grep $1 -e $2 $3 | grep -v $4
-}

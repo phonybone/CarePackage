@@ -33,12 +33,8 @@ function create_venv() {
     
 
     if [ -d ${VENVS_DIR}/${venv_name} ]; then
-	# if [ "${force}" = "-f" ]; then # dumb way of handling opts
-	#     rm_venv $1
-	# else
 	echo virtualenv ${venv_name} already exists
 	return
-	# fi
     fi
     
 

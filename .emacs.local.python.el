@@ -14,11 +14,8 @@
 
 
 
-
-
-;; (fset 'python-insert-warn
-;;    "\C-iwarn(\"\" % ())\C-r\"\C-m")
-;; (add-hook 'python-mode-hook '(lambda() (local-set-key "\C-cw" 'python-insert-warn)))
+(setq python-shell-interpreter-args "--simple-prompt -i")
+;; see https://github.com/jorgenschaefer/elpy/issues/1106, comment by RobinTourneme
 
 ;; (org-babel-do-load-languages
 ;;  'org-babel-load-languages

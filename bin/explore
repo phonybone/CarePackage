@@ -1,33 +1,37 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 #-*-python-*-
 
 '''
 Recursive descend a directory structure, showing a structured
 view of all files and directories found.
 
-python3
 '''
 import sys
 import os
 import re
+import errno
+
 
 def main(opts):
     if 'EXPLORE_IGNORE' in os.environ and not opts.all:
         ignore_rx = re.compile(os.environ['EXPLORE_IGNORE'])
     else:
-        ignore_rx = re.compile(r'(?!)') # never matches; see https://stackoverflow.com/questions/1723182/a-regex-that-will-never-be-matched-by-anything
+        ignore_rx = None
+        # ignore_rx = re.compile(r'(?!)') # never matches;
+        # see https://stackoverflow.com/questions/1723182/a-regex-that-will-never-be-matched-by-anything
     
     for dirpath, dirnames, files in os.walk(opts.root):
-        if ignore_rx.search(dirpath):
+        if ignore_rx and ignore_rx.search(dirpath):
             continue
-        print(dirpath)
+        _print(dirpath)
         if opts.structure_only:
             continue
         
-        path = dirpath if opts.full_paths else re.sub(r'[^/]', ' ', dirpath) 
-        for phile in files:
-            if not ignore_rx.search(phile):
-                print(os.path.join(path, phile))
+        path = dirpath if opts.full_paths else re.sub(r'[^/]', ' ', dirpath)  # replace path parts with blanks if opts
+        for fyle in sorted(files):
+            if not ignore_rx.search(fyle):
+                _print(os.path.join(path, fyle))
 
         # this works, because os.walk() respects changes made to dirnames (when topdown is True, which is the default)
         if opts.ignore_dots:
@@ -35,7 +39,17 @@ def main(opts):
                 dirnames.remove(dot_dir)
 
 
-
+def _print(*args):
+    # handle broken pipes:
+    try:
+        print(*args)
+    except IOError as e:
+        if e.errno == errno.EPIPE:
+            sys.stderr.close()  # prevent python warning from interpreter;
+            # see https://stackoverflow.com/questions/26692284/how-to-prevent-brokenpipeerror-when-doing-a-flush-in-python
+            sys.exit(0)
+        else:
+            raise
     return 0
 
 def getopts():
@@ -47,7 +61,6 @@ def getopts():
     parser.add_argument('-f', '--full-paths', help='show full paths', action='store_true')
     parser.add_argument('-s', '--structure-only', help='only show directory structure', action='store_true')
     parser.add_argument('-a', '--all', help='display all paths regardless of ${EXPLORE_IGNORE}', action='store_true', default=False)
-    # parser.add_argument('-i', action='append', help='ignore paths containing', default=[])
 
     opts=parser.parse_args()
     if opts.d:

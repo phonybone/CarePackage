@@ -156,3 +156,9 @@ export EDITOR=`which emacs`
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
 export SDKMAN_DIR="/home/victor/.sdkman"
 [[ -s "/home/victor/.sdkman/bin/sdkman-init.sh" ]] && source "/home/victor/.sdkman/bin/sdkman-init.sh"
+
+# The next line updates PATH for the Google Cloud SDK.
+if [ -f '/Users/victor.cassen/gsutil/google-cloud-sdk/path.bash.inc' ]; then source '/Users/victor.cassen/gsutil/google-cloud-sdk/path.bash.inc'; fi
+
+# The next line enables shell command completion for gcloud.
+if [ -f '/Users/victor.cassen/gsutil/google-cloud-sdk/completion.bash.inc' ]; then source '/Users/victor.cassen/gsutil/google-cloud-sdk/completion.bash.inc'; fi

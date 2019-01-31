@@ -17,7 +17,7 @@ function create_venv() {
 	return
     fi
 
-    py_vers=${2-py2}
+    py_vers=${3-py3}
     case ${py_vers} in
 	py2)
 	    python_exe=$PYTHON2
@@ -97,4 +97,41 @@ function rm_venv() {
 
 function venvs() {
     ls ${VENVS_DIR}
+}
+
+function sandbox() {
+    cd ~/Dropbox/sandbox/python
+    venv sandbox
+}
+
+function ytoj() {
+    # see https://gist.github.com/mboersma/1329669
+    python -c 'import sys, yaml, json; y=yaml.safe_load(sys.stdin.read()); print(json.dumps(y, indent=4))'
+}
+
+function pyroot {
+    start=${1:-.}
+    pushd $start >/dev/null
+    while [ -f __init__.py ]; do
+	cd ..
+    done
+    echo $PWD
+    popd >/dev/null
+}
+
+function pylint-to-emacs {
+    PYLINT=$(which pylint)
+    ROOT=${1-.}
+
+    # echo ${PYLINT} ${ROOT} \| ${HOME}/bin/pylint-to-emacs.py -d ${ROOT}
+    pushd ${ROOT} >/dev/null
+    ${PYLINT} ${ROOT} | ${HOME}/bin/pylint-to-emacs.py ${ROOT}
+    popd >/dev/null
+}
+
+
+function cd-package-root {
+    while [[ -e ./__init__.py ]] ; do
+	cd ..
+    done
 }

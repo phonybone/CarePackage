@@ -1,0 +1,98 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+'''
+Utility to convert seconds from the epoch to something human-readable.
+
+Author: Victor Cassen
+'''
+
+import sys
+import os
+from time import localtime, asctime, time, strptime, mktime
+
+formats = [
+    '%Y-%m-%d',
+    '%Y/%m/%d',
+    '%Y %m %d',
+
+    '%y-%m-%d',
+    '%y/%m/%d',
+    '%y %m %d',
+    ]
+
+def main(opts):
+    if not opts.arg:
+        print(ep2asc(None))
+        return 0
+    
+    arg = opts.arg[0]
+    try:
+        farg = float(arg)
+    except (ValueError, TypeError):
+        pass
+    else:
+        print(ep2asc(farg))
+        return 0
+
+    # custom format?
+    if opts.fmt:
+        try:
+            print(mktime(strptime(arg, opts.fmt)))
+            return 0
+        except ValueError:
+            print(f"Can't use {opts.fmt} to format {arg}", file=sys.stdout)
+            return 1
+
+    # default format?
+    for fmt in formats:
+        try:
+            print(mktime(strptime(arg, fmt)))
+            return 0
+        except ValueError:
+            pass
+        
+    print(f"Don't know what to do with '{arg}'")
+    return 1
+        
+def ep2asc(seconds):
+    '''
+    Return a human readable version of seconds since the epoch.  If not (bool)seconds, use current time.
+    '''
+    if bool(seconds):
+        s = localtime(int(seconds))
+    else:
+        s = localtime()
+    return asctime(s)
+
+def getopts():
+    import argparse
+    from argparse import RawTextHelpFormatter # Note: this applies to all options, might not always be what we want...
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
+    parser.add_argument('--fmt', help='interpret argv using custom format')
+    parser.add_argument('arg', nargs='*')
+    parser.add_argument('-v', action='store_true', help='verbose')
+    parser.add_argument('-d', action='store_true', help='debugging flag')
+    # parser.add_argument('args', nargs=argparse.REMAINDER)
+
+    opts = parser.parse_args()
+    if opts.d:
+        os.environ['DEBUG'] = 'True'
+        print(opts)
+    return opts
+
+
+if __name__ == '__main__':
+    opts = getopts()
+    try:
+        rc = main(opts)
+        if rc is None:
+            rc = 0
+        sys.exit(rc)
+    except Exception as e:
+        if opts.d:
+            import traceback
+            traceback.print_exc()
+        else:
+            print('error: {} {}'.format(type(e), e))
+        sys.exit(1)

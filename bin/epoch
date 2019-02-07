@@ -19,20 +19,29 @@ formats = [
     '%y-%m-%d',
     '%y/%m/%d',
     '%y %m %d',
-    ]
+
+    '%m-%d-%Y',
+    '%m/%d/%Y',
+    '%m %d %Y',
+
+    '%m-%d-%y',
+    '%m/%d/%y',
+    '%m %d %y',
+]
 
 def main(opts):
     if not opts.arg:
-        print(ep2asc(None))
-        return 0
-    
-    arg = opts.arg[0]
+        arg = time()
+    else:
+        arg = opts.arg[0]
+
     try:
         farg = float(arg)
     except (ValueError, TypeError):
         pass
     else:
-        print(ep2asc(farg))
+        offset = get_offset(opts)
+        print(ep2asc(farg + offset))
         return 0
 
     # custom format?
@@ -65,11 +74,39 @@ def ep2asc(seconds):
         s = localtime()
     return asctime(s)
 
+
+def get_offset(opts):
+    secs = 1
+    mins = secs * 60
+    hours = mins * 60
+    days = hours * 24
+    years = days * 365
+
+    offset = 0
+    if opts.S:
+        offset += opts.S
+    if opts.M:
+        offset += opts.M * mins
+    if opts.H:
+        offset += opts.H * hours
+    if opts.D:
+        offset += opts.D * days
+    if opts.Y:
+        offset += opts.Y * years
+    return offset
+
 def getopts():
     import argparse
     from argparse import RawTextHelpFormatter # Note: this applies to all options, might not always be what we want...
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
     parser.add_argument('--fmt', help='interpret argv using custom format')
+
+    parser.add_argument('-Y', help='year offset', type=float)
+    parser.add_argument('-D', help='day offset', type=float)
+    parser.add_argument('-H', help='hour offset', type=float)
+    parser.add_argument('-M', help='minute offset', type=float)
+    parser.add_argument('-S', help='second offset', type=float)
+
     parser.add_argument('arg', nargs='*')
     parser.add_argument('-v', action='store_true', help='verbose')
     parser.add_argument('-d', action='store_true', help='debugging flag')

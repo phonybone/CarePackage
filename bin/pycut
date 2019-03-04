@@ -1,0 +1,84 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+'''
+
+Author: Victor Cassen
+'''
+
+import sys
+import os
+import re
+
+def main(opts):
+    fields = get_fields(opts)
+    regex = re.compile(opts.r)
+    
+    for fname in opts.args:
+        with get_output_stream(fname) as f:
+            for line in f:
+                cols = regex.split(line)
+                print(opts.t.join([cols[i] for i in fields]))
+                
+    return 0
+
+
+def get_output_stream(fname):
+    return sys.stdin if fname == '-' else open(fname, 'r')
+
+def get_fields(opts):
+    ''' expand command-line opts to return a (sorted) list of field numbers to extract.  '''
+    fields = []
+    for f_no in re.split('[, ]+', opts.f):
+        mg = re.match('^(\d+)-(\d+)$', f_no)
+        if mg:
+            f1 = int(mg.group(1))
+            f2 = int(mg.group(2))
+            if f1 >= f2:
+                raise ValueError(F"{f1} >= {f2}")
+            fields.extend(range(f1, f2+1))
+            continue
+        
+        mg = re.match('^(\d+)$', f_no)
+        if mg:
+            fields.append(int(mg.group(1)))
+    fields.sort()
+    return fields
+
+def getopts():
+    import argparse
+    from argparse import RawTextHelpFormatter # Note: this applies to all options, might not always be what we want...
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
+    parser.add_argument('-f', help='columns to output; list of ints or ranges')
+    parser.add_argument('-r', help='column delimiter regex (default="\s+")', default='\s+')
+    parser.add_argument('-i', help='input stream (default="-" (stdin))')
+    parser.add_argument('-t', help='output delimiter (default="\t")', default='\t')
+
+    parser.add_argument('-v', action='store_true', help='verbose')
+    parser.add_argument('-d', action='store_true', help='debugging flag')
+    parser.add_argument('args', nargs=argparse.REMAINDER)
+
+    opts=parser.parse_args()
+    if opts.args == []:
+        opts.args = ['-']
+        
+    if opts.d:
+        os.environ['DEBUG'] = 'True'
+        print(opts)
+    return opts
+
+
+if __name__=='__main__':
+    opts = getopts()
+    try:
+        rc = main(opts)
+        if rc is None:
+            rc = 0
+        sys.exit(rc)
+    except Exception as e:
+        if opts.d:
+            import traceback
+            traceback.print_exc()
+        else:
+            print('error: {} {}'.format(type(e), e))
+        sys.exit(1)

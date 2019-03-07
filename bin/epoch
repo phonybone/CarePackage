@@ -10,6 +10,7 @@ Author: Victor Cassen
 import sys
 import os
 from time import localtime, asctime, time, strptime, mktime
+from pbutils.times import duration, ep2asc
 
 formats = [
     '%Y-%m-%d',
@@ -27,27 +28,52 @@ formats = [
     '%m-%d-%y',
     '%m/%d/%y',
     '%m %d %y',
+
+    '%Y-%m-%d %H:%M:%S',
+    '%Y/%m/%d %H:%M:%S',
+    '%Y %m %d %H:%M:%S',
+
+    '%y-%m-%d %H:%M:%S',
+    '%y/%m/%d %H:%M:%S',
+    '%y %m %d %H:%M:%S',
+
+    '%m-%d-%Y %H:%M:%S',
+    '%m/%d/%Y %H:%M:%S',
+    '%m %d %Y %H:%M:%S',
+
+    '%m-%d-%y %H:%M:%S',
+    '%m/%d/%y %H:%M:%S',
+    '%m %d %y %H:%M:%S',
 ]
 
 def main(opts):
+    if opts.dur:
+        print(F"{opts.dur}: {duration(opts.dur)}")
+        return 0
+
     if not opts.arg:
         arg = time()
     else:
         arg = opts.arg[0]
-
+        
     try:
         farg = float(arg)
     except (ValueError, TypeError):
         pass
     else:
-        offset = get_offset(opts)
-        print(ep2asc(farg + offset))
+        farg += get_offset(opts)
+        if opts.epoch:
+            fmt = f"{{farg:.{opts.precision}f}}"
+            print(fmt.format(farg=farg))
+
+        else:
+            print(ep2asc(farg, fmt=opts.fmt))
         return 0
 
     # custom format?
     if opts.fmt:
         try:
-            print(mktime(strptime(arg, opts.fmt)))
+            print(int(mktime(strptime(arg, opts.fmt))))
             return 0
         except ValueError:
             print(f"Can't use {opts.fmt} to format {arg}", file=sys.stdout)
@@ -56,7 +82,7 @@ def main(opts):
     # default format?
     for fmt in formats:
         try:
-            print(mktime(strptime(arg, fmt)))
+            print(int(mktime(strptime(arg, fmt))))
             return 0
         except ValueError:
             pass
@@ -64,16 +90,6 @@ def main(opts):
     print(f"Don't know what to do with '{arg}'")
     return 1
         
-def ep2asc(seconds):
-    '''
-    Return a human readable version of seconds since the epoch.  If not (bool)seconds, use current time.
-    '''
-    if bool(seconds):
-        s = localtime(int(seconds))
-    else:
-        s = localtime()
-    return asctime(s)
-
 
 def get_offset(opts):
     secs = 1
@@ -96,7 +112,6 @@ def get_offset(opts):
     return offset
 
 def getopts():
-    import argparse
     from argparse import RawTextHelpFormatter # Note: this applies to all options, might not always be what we want...
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
     parser.add_argument('--fmt', help='interpret argv using custom format')
@@ -107,6 +122,9 @@ def getopts():
     parser.add_argument('-M', help='minute offset', type=float)
     parser.add_argument('-S', help='second offset', type=float)
 
+    parser.add_argument('-e', '--epoch', help='output in epoch-seconds', action='store_true')
+    parser.add_argument('--dur', type=int, help='interpret arg as a duration')
+    parser.add_argument('-p', '--precision', type=positive_int, default=0, help='with -e (--epoch): decimal precision of output')
     parser.add_argument('arg', nargs='*')
     parser.add_argument('-v', action='store_true', help='verbose')
     parser.add_argument('-d', action='store_true', help='debugging flag')
@@ -119,7 +137,18 @@ def getopts():
     return opts
 
 
+def positive_int(x):
+    try:
+        x = int(x)
+        if x < 0:
+            raise ValueError(x)
+    except (TypeError, ValueError):
+        raise argparse.ArgumentTypeError(F"{x}: not a positive integer")
+    return x
+
+
 if __name__ == '__main__':
+    import argparse
     opts = getopts()
     try:
         rc = main(opts)

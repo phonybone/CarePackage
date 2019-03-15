@@ -11,6 +11,7 @@ import sys
 import os
 from time import localtime, asctime, time, strptime, mktime
 from pbutils.times import duration, ep2asc
+from pbutils.streams import warn
 
 formats = [
     '%Y-%m-%d',
@@ -48,13 +49,15 @@ formats = [
 
 def main(opts):
     if opts.dur:
-        print(F"{opts.dur}: {duration(opts.dur)}")
+        warn(F"{opts.dur}: {duration(opts.dur)}")
         return 0
 
     if not opts.arg:
         arg = time()
     else:
         arg = opts.arg[0]
+        if arg == '-':
+            arg = sys.stdin.readline().strip()
         
     try:
         farg = float(arg)
@@ -109,6 +112,8 @@ def get_offset(opts):
         offset += opts.D * days
     if opts.Y:
         offset += opts.Y * years
+    if 'DEBUG' in os.environ:
+        warn(f"offset={offset}")
     return offset
 
 def getopts():
@@ -133,7 +138,7 @@ def getopts():
     opts = parser.parse_args()
     if opts.d:
         os.environ['DEBUG'] = 'True'
-        print(opts)
+        warn(opts)
     return opts
 
 
@@ -160,5 +165,5 @@ if __name__ == '__main__':
             import traceback
             traceback.print_exc()
         else:
-            print('error: {} {}'.format(type(e), e))
+            warn('error: {} {}'.format(type(e), e))
         sys.exit(1)

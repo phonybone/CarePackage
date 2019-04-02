@@ -10,7 +10,7 @@
 (global-set-key [M-down] 'end-of-buffer)
 (global-set-key "\C-x'" 'next-error)
 (global-set-key "\C-c\t" 'auto-fill-mode)
-(global-set-key (kbd "C-:") 'comment-region)
+(global-set-key (kbd "C-:") 'comment-or-uncomment-region)
 (set-variable 'scroll-step 0)
 (setq inhibit-flash-screen t)
 (tool-bar-mode -1)

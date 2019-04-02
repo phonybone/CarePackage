@@ -11,6 +11,10 @@
 (global-set-key "\C-x'" 'next-error)
 (global-set-key "\C-c\t" 'auto-fill-mode)
 (global-set-key (kbd "C-:") 'comment-or-uncomment-region)
+(global-set-key (kbd "M-[") 'insert-pair)
+(global-set-key (kbd "M-{") 'insert-pair)
+(global-set-key (kbd "M-\"") 'insert-pair)
+
 (set-variable 'scroll-step 0)
 (setq inhibit-flash-screen t)
 (tool-bar-mode -1)
@@ -31,3 +35,14 @@
 (global-auto-revert-mode)
 
 (setq case-fold-search t)
+
+(server-start)
+
+;; Allow bash functions, et al, to work
+(setq shell-file-name "bash")
+(setq shell-command-switch "-ic")
+
+;; Make all *.org under ~/Dropbox/glossary visibile in the *scratch* directory
+(setq initial-major-mode 'org-mode)
+(setq initial-scratch-message (shell-command-to-string "org_notes ~/Dropbox/glossary 2>/dev/null"))
+(setq org-return-follows-link t)

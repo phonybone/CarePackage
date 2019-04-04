@@ -10,8 +10,11 @@ Author: Victor Cassen
 import sys
 import os
 from time import localtime, asctime, time, strptime, mktime
+
 from pbutils.times import duration, ep2asc
 from pbutils.streams import warn
+from pbutils.argparsers import parser_stub, wrap_main
+
 
 formats = [
     '%Y-%m-%d',
@@ -116,9 +119,8 @@ def get_offset(opts):
         warn(f"offset={offset}")
     return offset
 
-def getopts():
-    from argparse import RawTextHelpFormatter # Note: this applies to all options, might not always be what we want...
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=RawTextHelpFormatter)
+def make_parser():
+    parser = parser_stub(__doc__)
     parser.add_argument('--fmt', help='interpret argv using custom format')
 
     parser.add_argument('-Y', help='year offset', type=float)
@@ -131,15 +133,8 @@ def getopts():
     parser.add_argument('--dur', type=int, help='interpret arg as a duration')
     parser.add_argument('-p', '--precision', type=positive_int, default=0, help='with -e (--epoch): decimal precision of output')
     parser.add_argument('arg', nargs='*')
-    parser.add_argument('-v', action='store_true', help='verbose')
-    parser.add_argument('-d', action='store_true', help='debugging flag')
-    # parser.add_argument('args', nargs=argparse.REMAINDER)
 
-    opts = parser.parse_args()
-    if opts.d:
-        os.environ['DEBUG'] = 'True'
-        warn(opts)
-    return opts
+    return parser
 
 
 def positive_int(x):
@@ -153,17 +148,5 @@ def positive_int(x):
 
 
 if __name__ == '__main__':
-    import argparse
-    opts = getopts()
-    try:
-        rc = main(opts)
-        if rc is None:
-            rc = 0
-        sys.exit(rc)
-    except Exception as e:
-        if opts.d:
-            import traceback
-            traceback.print_exc()
-        else:
-            warn('error: {} {}'.format(type(e), e))
-        sys.exit(1)
+    parser = make_parser()
+    wrap_main(main, parser)

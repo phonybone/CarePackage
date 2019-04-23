@@ -1,0 +1,74 @@
+#-*-sh-*-
+# Bash functions relating to Google Cloud Platform
+
+function gcp_sql {
+    # start the GCP SQL proxy using hard-coded params:
+    db=$1
+    gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
+    project=rtb-dev-167405
+    database=terraform-pupil-database-${db}
+    port=5436
+    creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
+
+    echo psql -h localhost -p 5436 -U master_plan_user master_plan
+    echo or \'tbt-mp-db\'
+    
+    ${gcp_sql_proxy} \
+    --instances=${project}:us-west1:${database}=tcp:${port} \
+    --credential_file=$creds
+}
+
+
+function gcp_sql_dev {
+    gcp_sql dev
+}
+
+function gcp_sql_qa {
+    gcp_sql qa
+}
+
+function gcp_sql_prod {
+    # start the GCP SQL proxy using hard-coded params:
+    db=prod
+    gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
+    project=pupil-prod
+    database=terraform-pupil-database-${db}
+    port=5436
+    creds=${HOME}/.ssh/pupil-dev-owner-${db}-sa.json
+
+    echo psql -h localhost -p 5436 -U master_plan_user master_plan
+    echo or \'tbt-mp-db\'
+
+    ${gcp_sql_proxy} \
+    --instances=${project}:us-west1:${database}=tcp:${port} \
+    --credential_file=$creds
+}
+
+function sops_encrypt {
+    # this function depends on having the gcp_key available from pbpaste
+    gcp_key=$(pbpaste)
+    echo encrypting using ${gcp_key}
+    src=$1
+    dst=$(insert_elem $1 sops)	# insert_elem defined in ~victor/bin/insert_elem
+
+    tmpfile=$(mktemp)
+
+    OLD_CREDS=$GOOGLE_APPLICATION_CREDENTIALS
+    unset GOOGLE_APPLICATION_CREDENTIALS
+
+    sops --encrypt --gcp-kms ${gcp_key} $src >$tmpfile
+    ok=$?
+
+    if [[ -n "$OLD_CREDS" ]]; then
+	export GOOGLE_APPLICATION_CREDENTIALS=$OLD_CREDS
+    fi
+    
+    if [[ "$ok" != 0 ]]; then
+	echo unable to encrypt $src, aborting
+	return 1
+    fi
+
+    mv $tmpfile $dst
+    echo $dst written
+}
+

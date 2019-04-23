@@ -18,77 +18,6 @@ function dpsql {
 }
 
 
-function gcp_sql {
-    # start the GCP SQL proxy using hard-coded params:
-    db=$1
-    gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
-    project=rtb-dev-167405
-    database=terraform-pupil-database-${db}
-    port=5436
-    creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
-
-    echo psql -h localhost -p 5436 -U master_plan_user master_plan
-    echo or \'tbt-mp-db\'
-    
-    ${gcp_sql_proxy} \
-    --instances=${project}:us-west1:${database}=tcp:${port} \
-    --credential_file=$creds
-}
-
-
-function gcp_sql_dev {
-    gcp_sql dev
-}
-
-function gcp_sql_qa {
-    gcp_sql_dev qa
-}
-
-function gcp_sql_prod {
-    # start the GCP SQL proxy using hard-coded params:
-    db=prod
-    gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
-    project=pupil-prod
-    database=terraform-pupil-database-${db}
-    port=5436
-    creds=${HOME}/.ssh/pupil-dev-owner-${db}-sa.json
-
-    echo psql -h localhost -p 5436 -U master_plan_user master_plan
-    echo or \'tbt-mp-db\'
-
-    ${gcp_sql_proxy} \
-    --instances=${project}:us-west1:${database}=tcp:${port} \
-    --credential_file=$creds
-}
-
-function sops_encrypt {
-    # this function depends on having the gcp_key available from pbpaste
-    gcp_key=$(pbpaste)
-    echo encrypting using ${gcp_key}
-    src=$1
-    dst=$(insert_elem $1 sops)	# insert_elem defined in ~victor/bin/insert_elem
-
-    tmpfile=$(mktemp)
-
-    OLD_CREDS=$GOOGLE_APPLICATION_CREDENTIALS
-    unset GOOGLE_APPLICATION_CREDENTIALS
-
-    sops --encrypt --gcp-kms ${gcp_key} $src >$tmpfile
-    ok=$?
-
-    if [[ -n "$OLD_CREDS" ]]; then
-	export GOOGLE_APPLICATION_CREDENTIALS=$OLD_CREDS
-    fi
-    
-    if [[ "$ok" != 0 ]]; then
-	echo unable to encrypt $src, aborting
-	return 1
-    fi
-
-    mv $tmpfile $dst
-    echo $dst written
-}
-
 
 # ssh into various rtb servers:
 function rtb-server {
@@ -103,36 +32,6 @@ function rtb-server {
 function dev-server {
     echo LDAP password:
     ssh vcassen@dev-app-001.sea-001.zonarsystems.net
-}
-
-function get_pod {
-    podname=$1
-    ns=$2
-    kubectl get pods -n $2 | grep $podname | cut -f1 -d\ 
-}
-
-function login_pod {
-    podname=$1
-    ns=$2
-    pod=$(get_pod $podname $ns)
-    if [ -z "$pod" ]; then
-	echo No pods found
-	return 1
-    fi
-    kubectl exec -it -n $ns $pod -- /bin/bash
-}
-
-function pod_logs {
-    podname=$1
-    ns=$2
-    pod=$(get_pod $podname $ns)
-    kubectl logs -n $ns $pod -f
-}
-
-function connect_project {
-    # this maybe should be named 'connect_cluster'
-    project=${1-zonar-working}
-    gcloud container clusters get-credentials vpc-native-working-1-kube-zonar --zone us-west1-a --project $project
 }
 
 

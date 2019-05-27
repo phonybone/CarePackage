@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: print
+# key: pri
+# --
+print(f"$1{$2}")

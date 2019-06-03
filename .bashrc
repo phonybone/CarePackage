@@ -42,8 +42,6 @@ done
 export CDPATH=.:$HOME
 set cdpath=$HOME
 
-export PS1="[\h] <\$(current_git_branch)> ($?) \w\$ "
-
 
 export EDITOR=`which emacs`
 

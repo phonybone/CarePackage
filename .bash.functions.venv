@@ -17,19 +17,20 @@ function create_venv() {
 	return
     fi
 
-    py_vers=${3-py3}
-    case ${py_vers} in
-	py2)
-	    python_exe=$PYTHON2
-	    ;;
-	py3)
-	    python_exe=$PYTHON3
-	    ;;
-	*)
-	    echo unknown python: $py_vers
-	    return
-	    ;;
-    esac
+    python_exe=$PYTHON3		# no one uses v2 anymore
+    # py_vers=${2-py3}
+    # case ${py_vers} in
+    # 	py2)
+    # 	    python_exe=$PYTHON2
+    # 	    ;;
+    # 	py3)
+    # 	    python_exe=$PYTHON3
+    # 	    ;;
+    # 	*)
+    # 	    echo unknown python: $py_vers
+    # 	    return
+    # 	    ;;
+    # esac
     
 
     if [ -d ${VENVS_DIR}/${venv_name} ]; then
@@ -48,6 +49,15 @@ function create_venv() {
     pip install --upgrade ipython
     pip install --upgrade pbr
     popd
+
+    if [ ! -z "$2" ]; then	# create a symlink?
+	if [ -e "$2" ]; then
+	    echo not creating symlink  using $2: already exists
+	else
+	    ln -s ${VENVS_DIR}/${venv_name} "$2"
+	    echo created symlink $2
+	fi
+    fi
 }
 
 function current_venv() {
@@ -93,6 +103,7 @@ function rm_venv() {
     echo removing $1...
     rm -rf "${VENVS_DIR}/$1"
     set_prompt
+    # doesn't handle any symlinks that might have been created using create_venv
 }
 
 function venvs() {
@@ -105,6 +116,7 @@ function sandbox() {
 }
 
 function ytoj() {
+    # convert yaml (as read from stdin) to json
     # see https://gist.github.com/mboersma/1329669
     python -c 'import sys, yaml, json; y=yaml.safe_load(sys.stdin.read()); print(json.dumps(y, indent=4))'
 }
@@ -135,3 +147,4 @@ function cd-package-root {
 	cd ..
     done
 }
+

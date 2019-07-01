@@ -11,27 +11,43 @@ export VENVS_DIR=${HOME}/.virtualenvs
 export SYS_IPYTHON=/Library/Frameworks/Python.framework/Versions/2.7/bin/ipython
 
 function create_venv() {
+    local venv py_vers venv_root OPTIND
+    local usage="$0 [-p [py2|py3]] [-r venv_root] venv_name"
+    
+    while getopts "p:r:" arg; do
+	case ${arg} in
+	    p)
+		py_vers=${OPTARG}
+		;;
+	    r)
+		venv_root=${OPTARG}
+		;;
+	    *)
+		echo usage: $usage
+		return 1
+	esac
+    done
+    shift "$(( OPTIND -1))"
+
     venv_name=$1
     if [ -z "$venv_name" ]; then
 	echo missing arg: virtual env name
 	return
     fi
 
-    python_exe=$PYTHON3		# no one uses v2 anymore
-    # py_vers=${2-py3}
-    # case ${py_vers} in
-    # 	py2)
-    # 	    python_exe=$PYTHON2
-    # 	    ;;
-    # 	py3)
-    # 	    python_exe=$PYTHON3
-    # 	    ;;
-    # 	*)
-    # 	    echo unknown python: $py_vers
-    # 	    return
-    # 	    ;;
-    # esac
-    
+    python_exe=$PYTHON3
+    case ${py_vers} in
+    	py2)
+    	    python_exe=$PYTHON2
+    	    ;;
+    	py3)
+    	    python_exe=$PYTHON3
+    	    ;;
+    	*)
+    	    echo unknown python: $py_vers
+    	    return
+    	    ;;
+    esac
 
     if [ -d ${VENVS_DIR}/${venv_name} ]; then
 	echo virtualenv ${venv_name} already exists
@@ -50,12 +66,13 @@ function create_venv() {
     pip install --upgrade pbr
     popd
 
-    if [ ! -z "$2" ]; then	# create a symlink?
-	if [ -e "$2" ]; then
-	    echo not creating symlink  using $2: already exists
+    if [ ! -z "$venv_root" ]; then	# create a symlink?
+        echo venv_root is ${venv_root}
+	if [ -e "${venv_root}" ]; then
+	    echo not creating symlink  using ${venv_root}: already exists
 	else
-	    ln -s ${VENVS_DIR}/${venv_name} "$2"
-	    echo created symlink $2
+	    ln -s ${VENVS_DIR}/${venv_name} "${venv_root}"
+	    echo created symlink ${venv_root}
 	fi
     fi
 }

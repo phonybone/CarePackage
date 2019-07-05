@@ -1,0 +1,6 @@
+git config --global alias.co checkout
+git config --global alias.pp 'log --pretty=oneline'
+
+git config --global alias.lg "log --format='%C(red) %h %C(yellow) %<(20) %an %C(cyan) %<(34) %ad %C(green) %s'"
+
+git config --global alias.r-url "config --get remote.origin.url"

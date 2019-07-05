@@ -11,26 +11,43 @@ export VENVS_DIR=${HOME}/.virtualenvs
 export SYS_IPYTHON=/Library/Frameworks/Python.framework/Versions/2.7/bin/ipython
 
 function create_venv() {
+    local venv py_vers venv_root OPTIND
+    local usage="$0 [-p [py2|py3]] [-r venv_root] venv_name"
+    
+    while getopts "p:r:" arg; do
+	case ${arg} in
+	    p)
+		py_vers=${OPTARG}
+		;;
+	    r)
+		venv_root=${OPTARG}
+		;;
+	    *)
+		echo usage: $usage
+		return 1
+	esac
+    done
+    shift "$(( OPTIND -1))"
+
     venv_name=$1
     if [ -z "$venv_name" ]; then
 	echo missing arg: virtual env name
 	return
     fi
 
-    py_vers=${3-py3}
+    python_exe=$PYTHON3
     case ${py_vers} in
-	py2)
-	    python_exe=$PYTHON2
-	    ;;
-	py3)
-	    python_exe=$PYTHON3
-	    ;;
-	*)
-	    echo unknown python: $py_vers
-	    return
-	    ;;
+    	py2)
+    	    python_exe=$PYTHON2
+    	    ;;
+    	py3)
+    	    python_exe=$PYTHON3
+    	    ;;
+    	*)
+    	    echo unknown python: $py_vers
+    	    return
+    	    ;;
     esac
-    
 
     if [ -d ${VENVS_DIR}/${venv_name} ]; then
 	echo virtualenv ${venv_name} already exists
@@ -48,6 +65,16 @@ function create_venv() {
     pip install --upgrade ipython
     pip install --upgrade pbr
     popd
+
+    if [ ! -z "$venv_root" ]; then	# create a symlink?
+        echo venv_root is ${venv_root}
+	if [ -e "${venv_root}" ]; then
+	    echo not creating symlink  using ${venv_root}: already exists
+	else
+	    ln -s ${VENVS_DIR}/${venv_name} "${venv_root}"
+	    echo created symlink ${venv_root}
+	fi
+    fi
 }
 
 function current_venv() {
@@ -93,6 +120,7 @@ function rm_venv() {
     echo removing $1...
     rm -rf "${VENVS_DIR}/$1"
     set_prompt
+    # doesn't handle any symlinks that might have been created using create_venv
 }
 
 function venvs() {
@@ -105,6 +133,7 @@ function sandbox() {
 }
 
 function ytoj() {
+    # convert yaml (as read from stdin) to json
     # see https://gist.github.com/mboersma/1329669
     python -c 'import sys, yaml, json; y=yaml.safe_load(sys.stdin.read()); print(json.dumps(y, indent=4))'
 }
@@ -135,3 +164,4 @@ function cd-package-root {
 	cd ..
     done
 }
+

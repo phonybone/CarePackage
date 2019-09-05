@@ -6,6 +6,7 @@ alias daily='cd ~/zonar/projects/Services/daily-route-service && venv drs'
 alias routeapi='cd ~/zonar/projects/APIs/pupil-route-api && venv route_api'
 alias assetapi='cd ~/zonar/projects/APIs/pupil-asset-api && venv asset_api'
 alias route_board='cd ~/zonar/projects/route_board && venv route_board'
+alias sfa='cd ~/zonar/projects/sta-idle-posted && venv sta'
 
 # Postgres aliases:
 PG_BIN='/Applications/Postgres.app/Contents/Versions/9.6/bin'

@@ -11,8 +11,8 @@ except (ValueError, SyntaxError) as e:
         #print >>sys.stderr, 'trying JSON...'
         data=json.loads(js)
     except ValueError as e:
-        print 'unable to convert input: %s' % e
+        print('unable to convert input: %s' % e)
         sys.exit(1)
 
-print json.dumps(data, indent=2)
+print(json.dumps(data, indent=2))
 sys.exit(0)

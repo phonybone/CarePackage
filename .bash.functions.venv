@@ -12,9 +12,10 @@ export SYS_IPYTHON=/Library/Frameworks/Python.framework/Versions/2.7/bin/ipython
 
 function create_venv() {
     local venv py_vers venv_root OPTIND
-    local usage="$0 [-p [py2|py3]] [-r venv_root] venv_name"
+    local usage="create_venv [-p [py2|py3]] [-r venv_root] venv_name"
+    py_vers=py3
     
-    while getopts "p:r:" arg; do
+    while getopts "p:r:h" arg; do
 	case ${arg} in
 	    p)
 		py_vers=${OPTARG}
@@ -22,13 +23,17 @@ function create_venv() {
 	    r)
 		venv_root=${OPTARG}
 		;;
+	    h)
+		echo usage: $usage
+		return 1
+		;;
 	    *)
 		echo usage: $usage
 		return 1
 	esac
     done
     shift "$(( OPTIND -1))"
-
+    
     venv_name=$1
     if [ -z "$venv_name" ]; then
 	echo missing arg: virtual env name
@@ -100,6 +105,9 @@ function venv() {
     set_prompt
 }
 
+
+
+
 function my_activate() {
     # see https://gist.github.com/datagrok/2199506
     # type 'exit' instead of 'deactivate'
@@ -165,3 +173,7 @@ function cd-package-root {
     done
 }
 
+
+function v-site-pkgs {
+    pushd ${VIRTUAL_ENV}/lib/python3.6/site-packages
+}

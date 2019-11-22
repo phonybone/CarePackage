@@ -1,0 +1,11 @@
+#!/bin/bash
+
+root=${1:-$HOME/Dropbox/glossary}
+
+date
+printf "\nnotes:\n"
+find $root -iname '*.org' | sed 's/$root//' | sort | while read line; do
+    title=$(awk 'BEGIN {FS=": "}/#\+TITLE:/{ print $2 }' $line)
+    printf "[[file:$line][$title]]\n"
+done
+printf "\n* Scratch\n"

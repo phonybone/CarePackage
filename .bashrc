@@ -37,12 +37,6 @@ for file in ${HOME}/.bashrc.local.*; do
 done
 
 
-
-
-export CDPATH=.:$HOME
-set cdpath=$HOME
-
-
 export EDITOR=`which emacs`
 
 bind 'set match-hidden-files off'

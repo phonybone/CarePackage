@@ -92,7 +92,6 @@ set symlinks=ignore
 
 
 source $HOME/.aliases
-set cdpath = ( /workspace/vcassen /workspace/vcassen/TACO/software /workspace/vcassen/GDxBase )
 set histdup=prev
 
 setenv PAGER /usr/bin/less

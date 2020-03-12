@@ -15,6 +15,7 @@
 (global-set-key (kbd "M-{") 'insert-pair)
 (global-set-key (kbd "M-\"") 'insert-pair)
 (global-set-key (kbd "C-x C-b") 'ibuffer)
+(global-set-key (kbd "C-x g") 'magit-status)
 
 (set-variable 'scroll-step 0)
 (setq inhibit-flash-screen t)

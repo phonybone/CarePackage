@@ -1,12 +1,15 @@
+# -*-sh-*-
 # Bash functions relating to Kubernetes
 
 function get_pod {
+    # get pods
     podname=$1
     ns=$2
     kubectl get pods -n $2 | grep $podname | cut -f1 -d\ 
 }
 
 function login_pod {
+    # this only works if bash is installed on the pod
     podname=$1
     ns=$2
     pod=$(get_pod $podname $ns)
@@ -18,6 +21,15 @@ function login_pod {
 }
 
 function pod_logs {
+    # usage: pod_logs <podname> <ns>
+    podname=$1
+    ns=$2
+    pod=$(get_pod $podname $ns)
+    kubectl logs -n $ns $pod 
+}
+
+function pod_logsf {
+    # usage: pod_logs <podname> <ns>
     podname=$1
     ns=$2
     pod=$(get_pod $podname $ns)
@@ -28,4 +40,24 @@ function connect_project {
     # this maybe should be named 'connect_cluster'
     project=${1-zonar-working}
     gcloud container clusters get-credentials vpc-native-working-1-kube-zonar --zone us-west1-a --project $project
+}
+
+function k8-all-ns {
+    # list all namespaces via pods; can also just `k8 get namespaces`
+    kubectl get pods --all-namespaces | cut -c1-48 | uniq
+}
+
+function k8-set-ns {
+    # set the namespace param for future commands:
+    local cc=$(kubectl config current-context)
+    kubectl config set-context ${cc} --namespace="$1"
+}
+
+function helm-reset {
+    local deployment=$1
+    if [ -z "$deployment" ]; then
+	echo usage: helm-reset \<deployment\>
+	return
+    fi
+    helm delete --purge ${deployment}
 }

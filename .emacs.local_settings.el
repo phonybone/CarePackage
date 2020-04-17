@@ -48,3 +48,16 @@
 (setq initial-major-mode 'org-mode)
 (setq initial-scratch-message (shell-command-to-string "org_notes ~/Dropbox/glossary 2>/dev/null"))
 (setq org-return-follows-link t)
+
+(load-theme 'tango-dark)
+;; fix theme for org-mode font height
+(defun my/org-mode-hook ()
+  "Stop the org-level headers from increasing in height relative to the other text."
+  (dolist (face '(org-level-1
+                  org-level-2
+                  org-level-3
+                  org-level-4
+                  org-level-5))
+    (set-face-attribute face nil :weight 'semi-bold :height 1.0)))
+
+(add-hook 'org-mode-hook 'my/org-mode-hook)

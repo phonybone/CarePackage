@@ -1,0 +1,115 @@
+#-*-sh-*-
+function rm_stale_dockers() {
+    # may warn if an image is in use, but no harm no foul
+    docker images | grep '<none>' | cut -c41-52 | xargs docker rmi {}
+}
+
+function current_git_branch() {
+    br=`git branch 2>/dev/null | grep '^\*' | cut -f2 -d\  `
+    if [ "X$br" != "X" ] ; then
+	echo ${br}
+    else
+	echo
+    fi
+}
+
+function set_prompt() {
+    exit_code=$?
+    export PS1='\n\n[\h] {py::$(current_venv)} <$(current_git_branch)> (${exit_code})\n \w \$ '
+}
+
+# find all perl subs in a file
+function subs() { 
+    egrep -E '^(sub |__END__)' $1 
+}
+
+function psgrep() {
+    ps aux | grep "$1"
+}
+
+function ff() {
+    find . -name "$1"
+}
+
+# move up N directories:
+function up() { 
+    for ((j=${1:-1},i=0;i<j;i++)); do 
+	builtin cd ..;
+    done;
+}
+
+# move up to a named directory (does nothing if dir not found):
+function upto() {
+    target=$1
+    start_dir=$PWD
+    
+    oldifs="$IFS"
+    IFS="/"
+
+    j=0
+    for i in $start_dir
+    do
+	a[$j]=$i
+	j=$(( j+1 ))
+    done
+
+    yay=0
+    IFS="$oldifs"
+
+    for ((i=${#a[@]}-1; i>=0; i--))
+    do
+	if [ "${a[$i]}" = "$target" ]; then
+	    yay=1;
+	    break;
+	fi
+	builtin cd ..;
+    done
+    unset a			# otherwise it mucks up the next call to upto
+
+    if [ $yay -eq 0 ]; then
+	builtin cd $start_dir
+    fi
+}
+
+function get_abs_filename() {
+    # expand '../' and the like
+    # $1: relative filename
+    echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+}
+
+# Call mvn install:install-file to the local .m2 repo:
+function mvn-install() {
+    file=$1
+    group_id=$2
+    artifact_id=$3
+    version=$4
+    packaging=jar
+    mvn install:install-file \
+	-Dfile=$file \
+	-DgroupId=$group_id \
+	-DartifactId=$artifact_id \
+	-Dversion=$version \
+	-Dpackaging=$packaging \
+	-DgeneratePom=true
+}
+
+function here() {
+    cd `/bin/pwd`
+}
+
+
+
+function nocomments () {
+    grep -v '^#' $1 | grep -v '^$'
+}
+
+function flask_here() {
+    # work on the flask app rooted in this directory
+    export PYTHONPATH=`pwd`
+    app_fn=$(find . -name app.py | cut -c3-)
+    export FLASK_APP=${app_fn}
+
+    echo PYTHONPATH: $PYTHONPATH
+    echo FLASK_APP: $FLASK_APP
+}
+

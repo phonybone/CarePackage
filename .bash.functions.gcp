@@ -1,7 +1,7 @@
 #-*-sh-*-
 # Bash functions relating to Google Cloud Platform
 
-function gcp_sql {
+function gcp_sql_orig {
     # start the GCP SQL proxy using hard-coded params:
     db=$1
     gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
@@ -29,17 +29,64 @@ function gcp_sql_qa {
     gcp_sql qa
 }
 
+function gcp_sql {
+    # start the GCP SQL proxy
+    local project=$1
+    local database=$2
+    local creds=${HOME}/.ssh/${3}
+    if [[ ! -f ${creds} ]]; then
+	echo ${creds}: no such file
+	return 1
+    fi
+    local gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
+    local port=5436
+
+    # echo ${gcp_sql_proxy} --instances=${project}:us-west1:${database}=tcp:${port} 
+
+    ${gcp_sql_proxy} \
+    --instances=${project}:us-west1:${database}=tcp:${port} \
+    --credential_file=${creds}
+}
+
+
+function gcp_sql_dev {
+    # start the GCP SQL proxy using hard-coded params:
+    local project=rtb-dev-167405
+    local database=terraform-pupil-db-dev
+    local creds=pupil-dev-owner-qa-sa.json
+    gcp_sql ${project} ${database} ${creds}
+}
+
 function gcp_sql_prod {
+    # start the GCP SQL proxy using hard-coded params:
+    local project=pupil-prod
+    local database=terraform-pupil-db-prod
+    local creds=pupil-dev-owner-prod-sa.json
+    gcp_sql ${project} ${database} ${creds}
+}
+
+function gcp_sql_rtb_dev {
+    # start the GCP SQL proxy using hard-coded params:
+    db=dev
+    gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
+    project=pupil-dev
+    database=route_board
+    port=5436
+    creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
+
+    ${gcp_sql_proxy} \
+    --instances=${project}:us-west1:${database}=tcp:${port} \
+    --credential_file=$creds
+}
+
+function gcp_sql_rtb_prod {
     # start the GCP SQL proxy using hard-coded params:
     db=prod
     gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
     project=pupil-prod
-    database=terraform-pupil-database-${db}
+    database=route_board
     port=5436
-    creds=${HOME}/.ssh/pupil-dev-owner-${db}-sa.json
-
-    echo psql -h localhost -p 5436 -U master_plan_user master_plan
-    echo or \'tbt-mp-db\'
+    creds=${HOME}/.ssh/pupil-dev-owner-prod-sa.json
 
     ${gcp_sql_proxy} \
     --instances=${project}:us-west1:${database}=tcp:${port} \
@@ -47,7 +94,14 @@ function gcp_sql_prod {
 }
 
 function sops_encrypt {
-    # this function depends on having the gcp_key available from pbpaste
+    # this function depends on having the gcp_key available from pbpaste.
+    # If you are re-encrypting a file (that you already decrypted), the
+    # name of the resource can be found in the encrypted file as plaintext.
+    # Otherwise, go to GCP->Security->Cryptographic keys, choose the right
+    # project (eg zonar-working), find the name of the project you're working
+    # on (eg pupil-route-board), got to far-right vertical '...' menu, click
+    # on 'Copy Resource ID', and then manually edit away the 'cryptoKeyVersions/<version'
+    # bit at the end (ugh).
     gcp_key=$(pbpaste)
     echo encrypting using ${gcp_key}
     src=$1

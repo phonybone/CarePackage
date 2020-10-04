@@ -11,6 +11,9 @@ import sys
 import os
 from time import localtime, asctime, time, strptime, mktime
 
+pb_dir = os.path.expanduser("~/Dropbox/sandbox/python/phonybone_utils")
+sys.path.append(pb_dir)
+
 from pbutils.times import duration, ep2asc
 from pbutils.streams import warn
 from pbutils.argparsers import parser_stub, wrap_main

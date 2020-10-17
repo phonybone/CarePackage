@@ -4,7 +4,7 @@
 function gcp_sql_orig {
     # start the GCP SQL proxy using hard-coded params:
     db=$1
-    gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
+    gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
     project=rtb-dev-167405
     database=terraform-pupil-db-${db}
     port=5436
@@ -21,13 +21,13 @@ function gcp_sql_orig {
 # route-board db
 # rtb_user:HPyppMqSvElwuA1
 
-function gcp_sql_dev {
-    gcp_sql dev
-}
+# function gcp_sql_dev {
+#     gcp_sql dev
+# }
 
-function gcp_sql_qa {
-    gcp_sql qa
-}
+# function gcp_sql_qa {
+#     gcp_sql qa
+# }
 
 function gcp_sql {
     # start the GCP SQL proxy
@@ -38,10 +38,10 @@ function gcp_sql {
 	echo ${creds}: no such file
 	return 1
     fi
-    local gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
+    local gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
     local port=5436
 
-    # echo ${gcp_sql_proxy} --instances=${project}:us-west1:${database}=tcp:${port} 
+    echo ${gcp_sql_proxy} --instances=${project}:us-west1:${database}=tcp:${port} 
 
     ${gcp_sql_proxy} \
     --instances=${project}:us-west1:${database}=tcp:${port} \
@@ -57,6 +57,14 @@ function gcp_sql_dev {
     gcp_sql ${project} ${database} ${creds}
 }
 
+function gcp_sql_qa {
+    # start the GCP SQL proxy using hard-coded params:
+    local project=rtb-dev-167405
+    local database=terraform-pupil-db-qa
+    local creds=pupil-dev-owner-qa-sa.json
+    gcp_sql ${project} ${database} ${creds}
+}
+
 function gcp_sql_prod {
     # start the GCP SQL proxy using hard-coded params:
     local project=pupil-prod
@@ -68,7 +76,7 @@ function gcp_sql_prod {
 function gcp_sql_rtb_dev {
     # start the GCP SQL proxy using hard-coded params:
     db=dev
-    gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
+    gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
     project=pupil-dev
     database=route_board
     port=5436
@@ -82,7 +90,7 @@ function gcp_sql_rtb_dev {
 function gcp_sql_rtb_prod {
     # start the GCP SQL proxy using hard-coded params:
     db=prod
-    gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
+    gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
     project=pupil-prod
     database=route_board
     port=5436
@@ -102,18 +110,18 @@ function sops_encrypt {
     # on (eg pupil-route-board), got to far-right vertical '...' menu, click
     # on 'Copy Resource ID', and then manually edit away the 'cryptoKeyVersions/<version'
     # bit at the end (ugh).
-    gcp_key=$(pbpaste)
+    local gcp_key=$(pbpaste)
     echo encrypting using ${gcp_key}
-    src=$1
-    dst=$(insert_elem $1 sops)	# insert_elem defined in ~victor/bin/insert_elem
+    local src=$1
+    local dst=$(insert_elem $1 sops)	# insert_elem defined in ~victor/bin/insert_elem
 
-    tmpfile=$(mktemp)
+    local tmpfile=$(mktemp)
 
-    OLD_CREDS=$GOOGLE_APPLICATION_CREDENTIALS
+    local OLD_CREDS=$GOOGLE_APPLICATION_CREDENTIALS
     unset GOOGLE_APPLICATION_CREDENTIALS
 
     sops --encrypt --gcp-kms ${gcp_key} $src >$tmpfile
-    ok=$?
+    local ok=$?
 
     if [[ -n "$OLD_CREDS" ]]; then
 	export GOOGLE_APPLICATION_CREDENTIALS=$OLD_CREDS
@@ -126,6 +134,39 @@ function sops_encrypt {
 
     mv $tmpfile $dst
     echo $dst written
+}
+
+
+function sops_extract_resource_id {
+    # try the json version first
+    local rid=$(cat $1 | jq -e '.sops | .gcp_kms | .[0] | .resource_id' 2>/dev/null | tr -d \")
+    if [[ ! -z "${rid}" ]]; then
+    	echo $rid
+    	return 0
+    fi
+
+    rid=$(cat $1 | ytoj 2>/dev/null | jq '.sops | .gcp_kms | .[0] | .resource_id' | tr -d \" 2>/dev/null)
+    if [[ ! -z "${rid}" ]]; then
+    	echo $rid
+    	return 0
+    fi
+    return 1
+
+}
+
+function join_by { local IFS="$1"; shift; echo "$*"; }
+
+function sops_recrypt {
+    # $src should be a sops-encrypted file with '.sops' as the second to last extenstion
+    local tgt=$1
+    sops_extract_resource_id ${tgt} | pbcopy
+    local parts=$(echo $tgt | sed 's/\./ /g')
+    local src=$(join_by \. "${parts[@]/sops}")
+    if [[ ! -e ${src} ]]; then
+       echo ${src}: no such file
+       return 1
+    fi
+    sops_encrypt ${src}
 }
 
 function use_project {
@@ -144,4 +185,9 @@ function use_project {
     esac
     gcloud config set project $proj
     gcloud config list
+}
+
+
+function get_project {
+    gcloud config get-value project
 }

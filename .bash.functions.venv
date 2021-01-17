@@ -5,6 +5,7 @@
 # Can't just use `which python2`, because that could be set by virtual env
 export PYTHON2=/usr/local/bin/python2.7
 export PYTHON3=/usr/local/bin/python3.6
+export PYTHON37=/usr/local/bin/python3.7
 export DEFAULT_VENV=vpy3
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 export VENVS_DIR=${HOME}/.virtualenvs
@@ -12,35 +13,47 @@ export SYS_IPYTHON=/Library/Frameworks/Python.framework/Versions/2.7/bin/ipython
 
 function create_venv() {
     local venv py_vers venv_root OPTIND
-    local usage="create_venv [-p [py2|py3]] [-r venv_root] venv_name"
-    py_vers=py3
-    
-    while getopts "p:r:h" arg; do
+    local usage="create_venv [-p [py2|py3|py37]] [-r venv_root] venv_name"
+    py_vers=py37
+
+    # process args:
+    while getopts ":p:r:h" arg; do
 	case ${arg} in
-	    p)
+	    p )
 		py_vers=${OPTARG}
+		echo got here py_vers=${py_vers}
 		;;
-	    r)
+	    r )
 		venv_root=${OPTARG}
 		;;
-	    h)
+	    h )
 		echo usage: $usage
 		return 1
 		;;
-	    *)
+	    * )
 		echo usage: $usage
 		return 1
 	esac
     done
     shift "$(( OPTIND -1))"
-    
+
+    # slurp name:
     venv_name=$1
     if [ -z "$venv_name" ]; then
 	echo missing arg: virtual env name
 	return
     fi
 
+    # check for pre-existing venv:
+    if [ -d ${VENVS_DIR}/${venv_name} ]; then
+	echo virtualenv ${venv_name} already exists
+	return
+    fi
+    
+    # set python version:
     python_exe=$PYTHON3
+    echo py_vers is $py_vers
+
     case ${py_vers} in
     	py2)
     	    python_exe=$PYTHON2
@@ -48,30 +61,30 @@ function create_venv() {
     	py3)
     	    python_exe=$PYTHON3
     	    ;;
+	py37)
+	    python_exe=$PYTHON37
+    	    ;;
     	*)
     	    echo unknown python: $py_vers
     	    return
     	    ;;
     esac
 
-    if [ -d ${VENVS_DIR}/${venv_name} ]; then
-	echo virtualenv ${venv_name} already exists
-	return
-    fi
-    
-
+    # Actually create the thing:
     pushd $VENVS_DIR
     virtualenv --python=${python_exe} ${venv_name}
     venv ${venv_name}	     # see above
     my_activate $venv_name   # this effectively starts the virtual_env
 
+    # Install some packages
     pip install --upgrade pip
     pip install --upgrade wheel
     pip install --upgrade ipython
     pip install --upgrade pbr
     popd
 
-    if [ ! -z "$venv_root" ]; then	# create a symlink?
+    # create a symlink?
+    if [ ! -z "$venv_root" ]; then
         echo venv_root is ${venv_root}
 	if [ -e "${venv_root}" ]; then
 	    echo not creating symlink  using ${venv_root}: already exists
@@ -104,9 +117,6 @@ function venv() {
     fi
     set_prompt
 }
-
-
-
 
 function my_activate() {
     # see https://gist.github.com/datagrok/2199506
@@ -147,7 +157,7 @@ function ytoj() {
 }
 
 function pyroot {
-    start=${1:-.}
+    start=${1:-.}		# start from cwd by default
     pushd $start >/dev/null
     while [ -f __init__.py ]; do
 	cd ..

@@ -9,15 +9,16 @@
 			))
 
 (setq org-capture-templates '(("t" "Todo [inbox]" entry
-                               (file+headline (concat org-directory "/inbox.org") "Tasks")
+                               (file+headline "~/Dropbox/org/inbox.org" "Tasks")
                                "* TODO %i%?")
                               ("T" "Tickler" entry
-                               (file+headline (concat org-directory "/tickler.org") "Tickler")
+                               (file+headline "~/Dropbox/org/tickler.org" "Tickler")
                                "* %i%? \n %U")))
 
-(setq org-refile-targets '(((concat org-directory "/gtd.org") :maxlevel . 3)
-			   ((concat org-directory "/someday.org") :level . 1)
-			   ((concat org-directory "/tickler.org") :maxlevel . 2)
-			   ))
+(setq org-refile-targets '(
+			   ("~/Dropbox/org/gtd.org" :maxlevel . 3)
+			   ("~/Dropbox/org/someday.org" :maxlevel . 1)
+			   ("~/Dropbox/org/tickler.org" :maxlevel . 2)))
 
 (global-set-key (kbd "C-c c") 'org-capture)
+(global-set-key (kbd "C-c a") 'org-agenda)

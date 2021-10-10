@@ -18,7 +18,6 @@ def main(opts):
     if 'EXPLORE_IGNORE' in os.environ and not opts.all:
         ignore_rxs += os.environ['EXPLORE_IGNORE'].split('|')
         ignore_rx_pattern = '|'.join(ignore_rxs)
-        import pdb; pdb.set_trace()
         ignore_rx = re.compile(ignore_rx_pattern)
     else:
         # ignore_rx = None

@@ -8,3 +8,12 @@ function rmcs {
     docker container ls -a | cut -f1 -d\ | grep -v CONTAINER | parallel docker container rm
 }
 
+function docker-exec {
+    # docker exec runs a command in a running container.
+    # This function looks through
+    filter=$1
+    id=$(docker ps --format "{{.ID}} {{.Names}}" | grep $filter | cut -f1 -d\ )
+    echo container=$id
+    docker exec -it $id /bin/bash 
+}
+

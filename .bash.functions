@@ -71,11 +71,6 @@ function upto() {
     fi
 }
 
-function get_abs_filename() {
-    # expand '../' and the like
-    # $1: relative filename
-    echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
-}
 
 # Call mvn install:install-file to the local .m2 repo:
 function mvn-install() {
@@ -126,7 +121,6 @@ function flask_here() {
 }
 
 function flask_env {
-    # set flask env
     env_name=${1}
     if [[ ! -z ${env_name} ]]; then
 	export FLASK_ENV=${env_name}
@@ -134,5 +128,10 @@ function flask_env {
     fi
 }
 
+function play-ogg () {
+    canberra-gtk-play --file=$1
+}
 
-
+function show_path {
+    tr ':' '\n' <<<$PATH
+}

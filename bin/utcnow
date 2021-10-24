@@ -1,0 +1,5 @@
+#!/usr/bin/env python
+# -*-python-*-
+
+import datetime
+print str(datetime.datetime.utcnow())

@@ -1,33 +1,10 @@
 #-*-sh-*-
-# Bash functions relating to Google Cloud Platform
+export PUPIL_DEV_ID=rtb-dev-167405
+export PUPIL_PROD_ID=pupil-prod
+echo gcp
 
-function gcp_sql_orig {
-    # start the GCP SQL proxy using hard-coded params:
-    db=$1
-    gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
-    project=rtb-dev-167405
-    database=terraform-pupil-db-${db}
-    port=5436
-    creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
+export GCP_SQL_PROXY=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
 
-    echo psql -h localhost -p 5436 -U master_plan_user master_plan
-    echo or \'tbt-mp-db\'
-    
-    ${gcp_sql_proxy} \
-    --instances=${project}:us-west1:${database}=tcp:${port} \
-    --credential_file=$creds
-}
-
-# route-board db
-# rtb_user:HPyppMqSvElwuA1
-
-# function gcp_sql_dev {
-#     gcp_sql dev
-# }
-
-# function gcp_sql_qa {
-#     gcp_sql qa
-# }
 
 function gcp_sql {
     # start the GCP SQL proxy
@@ -38,16 +15,26 @@ function gcp_sql {
 	echo ${creds}: no such file
 	return 1
     fi
-    local gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
-    local port=5436
+    local port=${4:-5436}
 
-    echo ${gcp_sql_proxy} --instances=${project}:us-west1:${database}=tcp:${port} 
 
-    ${gcp_sql_proxy} \
+    # local GCP_SQL_PROXY=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
+
+    echo ${GCP_SQL_PROXY} --instances=${project}:us-west1:${database}=tcp:${port} 
+
+    ${GCP_SQL_PROXY} \
     --instances=${project}:us-west1:${database}=tcp:${port} \
     --credential_file=${creds}
 }
 
+function gcp_sql_test {
+    # start the GCP SQL proxy using hard-coded params:
+    local project=rtb-dev-167405
+    local database=terraform-pupil-db-test
+    local creds=pupil-dev-owner-qa-sa.json
+    local port=3306
+    gcp_sql ${project} ${database} ${creds} ${port}
+}
 
 function gcp_sql_dev {
     # start the GCP SQL proxy using hard-coded params:
@@ -76,13 +63,12 @@ function gcp_sql_prod {
 function gcp_sql_rtb_dev {
     # start the GCP SQL proxy using hard-coded params:
     db=dev
-    gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
     project=pupil-dev
     database=route_board
     port=5436
     creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
 
-    ${gcp_sql_proxy} \
+    ${GCP_SQL_PROXY} \
     --instances=${project}:us-west1:${database}=tcp:${port} \
     --credential_file=$creds
 }
@@ -90,15 +76,26 @@ function gcp_sql_rtb_dev {
 function gcp_sql_rtb_prod {
     # start the GCP SQL proxy using hard-coded params:
     db=prod
-    gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
+    # GCP_SQL_PROXY=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
     project=pupil-prod
     database=route_board
     port=5436
     creds=${HOME}/.ssh/pupil-dev-owner-prod-sa.json
 
-    ${gcp_sql_proxy} \
+    ${GCP_SQL_PROXY} \
     --instances=${project}:us-west1:${database}=tcp:${port} \
     --credential_file=$creds
+}
+
+
+function zpass_sql {
+    local env=$1
+    local project=rtb-dev-167405
+    local db=pupil-zpass-$env
+    local port=5437
+    local creds=pupil-dev-owner-qa-sa.json
+
+    gcp_sql $project $db $creds $port
 }
 
 function sops_encrypt {
@@ -145,11 +142,13 @@ function sops_extract_resource_id {
     	return 0
     fi
 
+    #  yaml vesion (calls ytoj (an npm package)):
     rid=$(cat $1 | ytoj 2>/dev/null | jq '.sops | .gcp_kms | .[0] | .resource_id' | tr -d \" 2>/dev/null)
     if [[ ! -z "${rid}" ]]; then
     	echo $rid
     	return 0
     fi
+    echo extraction failed
     return 1
 
 }
@@ -167,6 +166,18 @@ function sops_recrypt {
        return 1
     fi
     sops_encrypt ${src}
+}
+
+function sops_recrypt_and_commit {
+    extra_msg=${1:- }
+    folders=(environments deploy)
+    for secrets in $(find ${folders[@]}  -name '*.sops.yml' 2>/dev/null); do
+	sops_recrypt $secrets
+	git add $secrets
+    done
+
+    git commit -m "$(current_git_branch): updating sops secrets ${extra_msg}"
+    git status
 }
 
 function use_project {

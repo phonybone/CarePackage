@@ -73,3 +73,7 @@ function mvn-install() {
 	-DgeneratePom=true
 }
 
+function here() {
+    cd `/bin/pwd`
+}
+

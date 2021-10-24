@@ -5,7 +5,9 @@
 # Can't just use `which python2`, because that could be set by virtual env
 export PYTHON2=/usr/local/bin/python2.7
 export PYTHON3=/usr/local/bin/python3.6
-export PYTHON37=/usr/local/bin/python3.7
+export PYTHON37=/usr/local/Cellar/python@3.7/3.7.9_2/bin/python3
+export PYTHON38=/usr/local/Cellar/python@3.8/3.8.7/bin/python3
+export PYTHON39=/usr/local/Cellar/python@3.9/3.9.1_6/bin/python3
 export DEFAULT_VENV=vpy3
 export VIRTUAL_ENV_DISABLE_PROMPT=1
 export VENVS_DIR=${HOME}/.virtualenvs
@@ -13,47 +15,36 @@ export SYS_IPYTHON=/Library/Frameworks/Python.framework/Versions/2.7/bin/ipython
 
 function create_venv() {
     local venv py_vers venv_root OPTIND
-    local usage="create_venv [-p [py2|py3|py37]] [-r venv_root] venv_name"
-    py_vers=py37
-
-    # process args:
-    while getopts ":p:r:h" arg; do
+    local usage="create_venv [-p [py2|py3]] [-r venv_root] venv_name"
+    py_vers=py3
+    
+    while getopts "p:r:h" arg; do
 	case ${arg} in
-	    p )
+	    p)
 		py_vers=${OPTARG}
-		echo got here py_vers=${py_vers}
 		;;
-	    r )
+	    r)
 		venv_root=${OPTARG}
 		;;
-	    h )
+	    h)
 		echo usage: $usage
 		return 1
 		;;
-	    * )
+	    *)
 		echo usage: $usage
 		return 1
 	esac
     done
     shift "$(( OPTIND -1))"
-
-    # slurp name:
+    
     venv_name=$1
     if [ -z "$venv_name" ]; then
 	echo missing arg: virtual env name
 	return
     fi
 
-    # check for pre-existing venv:
-    if [ -d ${VENVS_DIR}/${venv_name} ]; then
-	echo virtualenv ${venv_name} already exists
-	return
-    fi
-    
-    # set python version:
-    python_exe=$PYTHON3
-    echo py_vers is $py_vers
-
+    python_exe=$PYTHON37
+    echo py_vers ${py_vers}
     case ${py_vers} in
     	py2)
     	    python_exe=$PYTHON2
@@ -61,8 +52,14 @@ function create_venv() {
     	py3)
     	    python_exe=$PYTHON3
     	    ;;
-	py37)
-	    python_exe=$PYTHON37
+    	py37)
+    	    python_exe=$PYTHON37
+    	    ;;
+    	py38)
+    	    python_exe=$PYTHON38
+    	    ;;
+    	py39)
+    	    python_exe=$PYTHON39
     	    ;;
     	*)
     	    echo unknown python: $py_vers
@@ -70,21 +67,24 @@ function create_venv() {
     	    ;;
     esac
 
-    # Actually create the thing:
+    if [ -d ${VENVS_DIR}/${venv_name} ]; then
+	echo virtualenv ${venv_name} already exists
+	return
+    fi
+    
+
     pushd $VENVS_DIR
     virtualenv --python=${python_exe} ${venv_name}
     venv ${venv_name}	     # see above
     my_activate $venv_name   # this effectively starts the virtual_env
 
-    # Install some packages
     pip install --upgrade pip
     pip install --upgrade wheel
     pip install --upgrade ipython
     pip install --upgrade pbr
     popd
 
-    # create a symlink?
-    if [ ! -z "$venv_root" ]; then
+    if [ ! -z "$venv_root" ]; then	# create a symlink?
         echo venv_root is ${venv_root}
 	if [ -e "${venv_root}" ]; then
 	    echo not creating symlink  using ${venv_root}: already exists
@@ -105,18 +105,28 @@ function current_venv() {
 
 # switch to a particular venv:
 function venv() {
-    if [ -n "$1" ]; then
+    if [ -z "$1" ]; then
+	echo 'usage: venv <virtual-env>'
+	return 1
+    fi
+
+    if [ -d "$1" ]; then
+	echo activating local $1
+	source $1/bin/activate
+    else
 	if [ ! -d ${VENVS_DIR}/$1 ]; then
 	   echo no such venv: $1
-	   return
+	   return 1
 	fi
-    fi
-	 
-    if [ -n "$1" ]; then
+
 	source ${VENVS_DIR}/$1/bin/activate
+	echo yay
     fi
-    set_prompt
+    # set_prompt
 }
+
+
+
 
 function my_activate() {
     # see https://gist.github.com/datagrok/2199506
@@ -137,7 +147,7 @@ function rm_venv() {
     fi
     echo removing $1...
     rm -rf "${VENVS_DIR}/$1"
-    set_prompt
+    # set_prompt
     # doesn't handle any symlinks that might have been created using create_venv
 }
 
@@ -157,7 +167,7 @@ function ytoj() {
 }
 
 function pyroot {
-    start=${1:-.}		# start from cwd by default
+    start=${1:-.}
     pushd $start >/dev/null
     while [ -f __init__.py ]; do
 	cd ..
@@ -185,5 +195,6 @@ function cd-package-root {
 
 
 function v-site-pkgs {
+    # pushd to the site-packages dir for this venv.
     pushd ${VIRTUAL_ENV}/lib/python3.6/site-packages
 }

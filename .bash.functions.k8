@@ -1,17 +1,21 @@
 # -*-sh-*-
 # Bash functions relating to Kubernetes
+# see also https://kubernetes.io/docs/reference/kubectl/cheatsheet/
+
+# setup tab completion (I think)
+complete -F __start_kubectl k8
 
 function get_pod {
-    # get pods
-    podname=$1
-    ns=$2
-    kubectl get pods -n $2 | grep $podname | cut -f1 -d\ 
+    # get pods matching regex in $1
+    local podname=$1
+    local ns=$2
+    kubectl get pods -n "${ns}" | grep "${podname}" | cut -f1 -d\ 
 }
 
 function login_pod {
     # this only works if bash is installed on the pod
-    podname=$1
-    ns=$2
+    local podname=$1
+    local ns=$2
     pod=$(get_pod $podname $ns)
     if [ -z "$pod" ]; then
 	echo No pods found
@@ -22,23 +26,32 @@ function login_pod {
 
 function pod_logs {
     # usage: pod_logs <podname> <ns>
-    podname=$1
-    ns=$2
+    local podname=$1
+    local ns=$2
     pod=$(get_pod $podname $ns)
-    kubectl logs -n $ns $pod 
+    if [[ -z ${pod} ]]; then
+	echo no pod found for ${podname}
+	return 1
+    fi
+    echo kubectl logs -n $ns $pod # "$@"
+    kubectl logs -n $ns $pod "$3"
 }
 
 function pod_logsf {
     # usage: pod_logs <podname> <ns>
-    podname=$1
-    ns=$2
+    local podname=$1
+    local ns=$2
     pod=$(get_pod $podname $ns)
-    kubectl logs -n $ns $pod -f
+    if [[ -z ${pod} ]]; then
+	echo no pod found for ${podname}
+	return 1
+    fi
+    kubectl logs -f -n $ns $pod "$3"
 }
 
 function connect_project {
     # this maybe should be named 'connect_cluster'
-    project=${1-zonar-working}
+    local project="${1:=$(gcloud config get-value project)}"
     gcloud container clusters get-credentials vpc-native-working-1-kube-zonar --zone us-west1-a --project $project
 }
 

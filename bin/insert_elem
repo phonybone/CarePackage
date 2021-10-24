@@ -1,0 +1,18 @@
+#!/usr/bin/env perl
+# -*-perl-*-
+#
+# break up input ($1) (according to $4, default=\.), and insert element ($2) at position indicated by $3.
+
+$input=shift or die "no input\n";
+$elem=shift or die "no elem\n";
+$where=shift;
+defined $where or $where = -1;
+$sep=shift || '.';
+if ($sep =~ /[.*(){}+?]/) {		# *()[]{}+?]/) {
+    $sep = "\\$sep";
+}
+
+@a=split(/$sep/, $input);
+splice(@a, $where, 0, ($elem));
+$sep =~ s/\\//;			# remove '\' if present
+print join($sep, @a), "\n"

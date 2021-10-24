@@ -1,4 +1,7 @@
 #-*-sh-*-
+export ZADMIN_QA=postgresql://postgres:snator9@dev-db-003.sea-001.zonarsystems.net/zadmin
+
+
 function pylint_tests() {
 	 explore -f tests | grep '\.py$' | xargs pylint --rcfile pylintrc | l
 }
@@ -22,9 +25,19 @@ function dpsql {
 # ssh into various rtb servers:
 function rtb-server {
     envrn=${1:-dev}
+    if [[ "${envrn}" == "-h" ]]; then
+	echo 'usage: rtb-server <envrn> <app> <n> <user>'
+	echo 'defaults:'
+	echo 'envrn: dev [qa|prod]'
+	echo 'app: etl [app db]'
+	echo 'n: 1'
+	echo 'user: vcassen'
+	return 1
+    fi
     app=${2:-etl}		# one of db, etl, or app
-    user=${3:-vcassen}
-    server="${envrn}-rtb-${app}-001.sea-001.zonarsystems.net"
+    n=${n:-1}
+    user=${4:-vcassen}
+    server="${envrn}-rtb-${app}-00${n}.sea-001.zonarsystems.net"
     echo \(LDAP password\)
     ssh "${user}@${server}"
 }
@@ -49,5 +62,230 @@ function gtc_dev {
     else
 	cmd=''
     fi
-    ssh -t vcassen@dev-gtc-web-003.sea-001.zonarsystems.net "${cmd}"
-}    
+    ldap_pw
+
+    srv=gtc
+    srvno=3
+    ssh -t vcassen@dev-${srv}-web-00${srvno}.sea-001.zonarsystems.net "${cmd}"
+}
+
+function gtc4_dev {
+    ldap_pw
+    ssh -t vcassen@dev-gtc4-web-001.sea-001.zonarsystems.net "${cmd}"
+}
+
+function gtc_db {
+    # I think this server is dead
+    ssh vcassen@dev-db-007.sea-001.zonarsystems.net
+}
+
+function db_tunnels {
+ssh -L 5433:dev-db-008.sea-001.zonarsystems.net:5432 \
+    -L 5434:dev-db-007.sea-001.zonarsystems.net:5432 \
+    vcassen@dev-db-008.sea-001.zonarsystems.net
+}
+
+function swipe {
+    SERVER='sneigelgtc3dev'
+    ACCOUNT='dbr47_rep1023'
+    PISSWORD='rust.never.sleeps.79'
+    curl -k "https://${SERVER}.sea-001.zonarsystems.net/zmisc/addscan.php?environment=dev&account=${ACCOUNT}&gpsid=8505229&odometer=102453&rfid=4321&lat=47.258728&long=-122.465973&password=${PISSWORD}"
+}
+
+function findswipes {
+    ACCOUNT='dbr47_rep1023'
+    Z_ENV=dev
+    curl -X POST -d "account=${ACCOUNT}" "https://zapy-zpassplus.${Z_ENV}.zonarsystems.net/zpassplus/find_swipes"
+}
+
+function ldap_pw {
+    grep -A1 'LDAP password' ${HOME}/Dropbox/Zonar/hr-admin/hr-admin.org | tail -1 | tr -d '[:space:]' | pbcopy
+    echo LDAP pw copied to clipboard
+}
+
+function sops_rtb_db_uri {
+    # 
+    local sops_file=$1
+    if [[ ! -f ${sops_file} ]]; then
+       echo "${sops_file}: no such file"
+       return 1
+    fi
+    sops --decrypt ${sops_file} | grep DATABASE_URI | cut -f2- -d\: | sed s/3306/5436/
+}
+
+function rtb_db_uri {
+    # find a rtb_db uri by decrypting the given sops file, then use it to connect to db
+    # assumes gcp_sql proxy is already running
+    local envn=$1
+    local sops_file=${HOME}/zp/routeboard-api/deploy/${envn}/routeboard-api-env.secret.sops.yml
+    local db_uri=$(sops_rtb_db_uri ${sops_file})
+    echo ${db_uri}
+    export PSQL_URI=${db_uri}
+    psql ${db_uri}
+}
+
+function rtb_db_test {
+    export PSQL_URI=postgresql://postgres:postgres@localhost:3306/route_board
+    echo $PSQL_URI
+    psql $PSQL_URI
+}
+
+function rtb_db_dev {
+    rtb_db_uri development
+}
+
+function rtb_db_staging {
+    rtb_db_uri staging
+}
+
+function rtb_db_prod {
+    rtb_db_uri production
+}
+
+function sops_mp_db_uri {
+    # connect to MP db via cloud_sql_proxy (call gcp_sql_<env> first in different window)
+    local envn=$1
+    local sops_file=${HOME}/zp/Services/pupil-ingestion-service/deploy/${envn}/cloudsql-db-credentials.secret.sops.yml
+    if [[ ! -f ${sops_file} ]]; then
+	echo ${sops_file}: no such file
+	return 1
+    fi
+    local username=$(sops --decrypt ${sops_file} | grep username: | cut -f2 -d\: | tr -d ' ')
+    local password=$(sops --decrypt ${sops_file} | grep password: | cut -f2 -d\: | tr -d ' ')
+    local psql_uri=postgresql://${username}:${password}@localhost:5436/master_plan
+    echo $psql_uri
+    export PSQL_URI=$psql_uri
+    psql $psql_uri
+}
+
+function mp_db_dev {
+    sops_mp_db_uri development
+}
+
+function mp_db_staging {
+    sops_mp_db_uri staging
+}
+
+function mp_db_prod {
+    sops_mp_db_uri production
+}
+
+function zpass_db {
+    local env=$1
+    if [[ -z ${ZPASS_ROOT} ]] ; then
+	echo ZPASS_ROOT not set \(try .bashrc.local\)
+	return
+    fi
+    sops_file=${ZPASS_ROOT}/deploy/${env}/zpass-api-env.secret.sops.yml
+    local psql_uri=$(sops -d $sops_file | grep DATABASE_URI | cut -f2- -d: | sed 's/3306/5437/')
+    if [[ -z $psql_uri ]]; then
+	echo failed to extract psql uri from $sops_file
+	return
+    fi
+    export PSQL_URI=${psql_uri}
+    echo $PSQL_URI
+    psql ${PSQL_URI}
+}
+
+function zpass_db_dev {
+    zpass_db development
+}
+
+function zpass_db_staging {
+    zpass_db staging
+}
+
+function zadmin_dev {
+    psql postgresql://postgres:snator9@dev-zadmin.sea-001.zonarsystems.net/zadmin_dev
+}
+
+function zadmin_qa {
+    echo $ZADMIN_QA
+    psql $ZADMIN_QA
+}
+
+function make_postgresql {
+    # construct a postgres url
+    local dbuser=$1
+    local dbpasswd=$2
+    local server=$3
+    local port=$4
+    local dbname=$5
+    echo "postgresql://${dbuser}:${dbpasswd}@${server}:${port}/${dbname}"
+}
+
+function gtc_db {
+    # connect to a gtc db; look up info in zadmin
+    if [ -z "${ZADMIN_QA}" ]; then
+	>&2 echo ZADMIN_QA not set 
+	return 1
+    fi
+    local code=$1
+    local -p params
+    local stuff=$(psql $ZADMIN_QA -c "select id, code, dbuser, dbpasswd, server_name, server_port, dbase from v_accounts where code='${code}'" | head -3 | tail -1 | sed  's/\|/ /g')
+    if [ "${stuff}" == '(0 rows)' ] ; then
+	echo nothing found for account ${code}
+	return
+    fi
+    IFS=' ' read -r -a params <<<"${stuff}"
+    params=("${params[@]:2}")	# "shift" params by 2
+
+    # localize for use with tunnel on port 5433
+    params[2]=localhost
+    params[3]=5433
+    echo psql $(make_postgresql ${params[@]})
+    psql $(make_postgresql ${params[@]})
+}
+
+function dev_tunnel {
+    local target='dev-gtc-db-0015.gtc-db-dev.zonarsystems.net:5432'
+    local verbose=$2
+    local port=${1:5433}
+    zonar_tunnel $target $port $verbose
+}
+
+function qa_tunnel {
+    local target='qa-gtc-db-0003.gtc-db-qa.zonarsystems.net:5432'
+    local port=${1:-5433}
+    local verbose=$2
+    zonar_tunnel $target $port $verbose
+}
+
+function zonar_tunnel {
+    local target=$1
+    local local_port=$2
+    local verbose=$3
+    if [[ "$verbose" == "-v" ]]; then
+	echo $target
+    fi
+
+    ldap_pw
+    local proxy='vcassen@dev-zing-import-001.sea-001.zonarsystems.net'
+    
+    ssh -N -f -L ${local_port}:$target $proxy
+    if [ "$?" == 0 -a "$verbose" == "-v" ]; then
+	echo tunnel established
+    fi
+}
+
+function kill_tunnel {
+    ps aux | grep ssh | grep -e -L | awk '{print $2}' | xargs kill
+}
+
+function show_tunnel {
+    ps aux | grep ssh | grep -e -L
+}
+
+function dev_zing {
+    ldap_pw
+    ssh vcassen@dev-zing-import-001.sea-001.zonarsystems.net
+}
+
+function update_sops {
+    local folders=("development" "staging" "production")
+    for folder in "$folders[@]"; do
+	sops_recrypt $folder/env_prepare.sops.yml
+    done
+    git add .
+    git commit -m "$(current_git_branch): updating sops"
+}

@@ -1,0 +1,32 @@
+#!/bin/bash
+
+function current_git_branch() {
+    branch=$(git branch 2>/dev/null | grep '^\*' | cut -f2 -d\  )
+    if [ "X$branch" != "X" ] ; then
+	echo ${branch}
+    else
+	echo
+    fi
+}
+
+function git-rm-deleted {
+    # git rm files that have been removed from the index (?)
+    git status | grep deleted | cut -f2 -d: | xargs git rm
+}
+
+function git-new-branch {
+    local branch_name=$1
+    git switch -c ${branch_name}
+    export GIT_BRANCH=${branch_name}
+}
+
+function git-commit {
+    local msg=$1
+    git commit -m "$(current_git_branch) $msg"
+}
+
+function git-current-sha {
+    git rev-parse HEAD | pbcopy
+    pbpaste
+}
+

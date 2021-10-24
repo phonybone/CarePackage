@@ -1,0 +1,36 @@
+# -*- mode: snippet -*-
+# name: wrapmain
+# key: wrapmain
+# --
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+'''
+$1
+
+Author: Victor Cassen
+vmc.swdev@gmail.com
+'''
+
+import sys
+import os
+
+from pbutils.argparsers import parser_stub, wrap_main
+
+
+def main(config):
+    $0
+    print('yay')
+    return 0
+
+
+def make_parser():
+    parser = parser_stub(__doc__)
+    parser.add_argument('--$2', help='$3')
+    parser.add_argument('arg', nargs='*')
+
+    return parser
+
+if __name__ == '__main__':
+    parser = make_parser()
+    wrap_main(main, parser)

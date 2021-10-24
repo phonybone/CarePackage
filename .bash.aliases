@@ -1,8 +1,7 @@
-#-*-sh-*-
 alias ls='ls -FH'
 alias la='ls -FHA'
 alias ll='ls -FHl'
-alias lsd='file * | grep directory | cut -f1 -d:'
+alias lsd='ls -FH | grep \/'
 
 ##alias rm='/usr/local/scripts/safe_rm \!*'
 #unalias rm
@@ -85,4 +84,5 @@ alias jserv='cd ~/l/Everest/Everest_job_service/job_service'
 alias pserv='cd ~/l/Everest/panel_service/panel_service'
 alias chomper='cd ~/l/Everest/Chomper'
 
-alias isaid='sudo'
+alias k8=kubectl
+alias tf=terraform

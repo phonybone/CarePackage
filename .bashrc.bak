@@ -5,8 +5,8 @@
 # If not running interactively, don't do anything
 [ -z "$PS1" ] && return
 
-
-files=( "/etc/bashrc" )
+# source other files:
+files=( "/etc/bashrc" "${HOME}/.bashrc.local" "${HOME}/.bash.aliases" "${HOME}/.bash.functions" "${HOME}/.bash.aws" )
 for file in "${files[@]}"; do 
   if [ -f $file ]; then
     . $file
@@ -14,30 +14,8 @@ for file in "${files[@]}"; do
 done
 
 
-# source other files: functions, then aliases
-for file in ${HOME}/.bash.function*; do
-    . $file
-done
-
-for file in ${HOME}/.bash.aliases*; do
-    . $file
-done
-
-# Do these after aliases and functions have been defined:
-files=( "${HOME}/.bashrc.local" "${HOME}/.bash.aws" )
-for file in "${files[@]}"; do 
-  if [ -f $file ]; then
-    . $file
-  fi
-done
-
-
-for file in ${HOME}/.bashrc.local.*; do
-    . $file
-done
-
-
-
+export CDPATH=.:$HOME
+set cdpath=$HOME
 
 export PS1="[\h] <\$(current_git_branch)> ($?) \w\$ "
 
@@ -120,8 +98,8 @@ if [ -x /usr/bin/dircolors ]; then
 fi
 
 # some more ls aliases
-#alias ll='ls -alF'
-#alias la='ls -A'
+alias ll='ls -alF'
+alias la='ls -A'
 
 # Add an "alert" alias for long running commands.  Use like so:
 #   sleep 10; alert
@@ -144,21 +122,17 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 
 
+set_prompt
+if [ "$(current_venv)" = "sys" ]; then
+    echo starting virtualenv
+    workon vpython
+fi
+
 export EDITOR=`which emacs`
 
 
+
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-# (sdkman is some java thing)
-# export SDKMAN_DIR="/home/victor/.sdkman"
-# [[ -s "/home/victor/.sdkman/bin/sdkman-init.sh" ]] && source "/home/victor/.sdkman/bin/sdkman-init.sh"
-
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/victor.cassen/gsutil/google-cloud-sdk/path.bash.inc' ]; then source '/Users/victor.cassen/gsutil/google-cloud-sdk/path.bash.inc'; fi
-
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/victor.cassen/gsutil/google-cloud-sdk/completion.bash.inc' ]; then source '/Users/victor.cassen/gsutil/google-cloud-sdk/completion.bash.inc'; fi
-
-export NVM_DIR="/home/victor/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-
-complete -C /usr/bin/terraform terraform
+export SDKMAN_DIR="/home/victor/.sdkman"
+[[ -s "/home/victor/.sdkman/bin/sdkman-init.sh" ]] && source "/home/victor/.sdkman/bin/sdkman-init.sh"
+MANPATH=$MANPATH:$HOME/share/man

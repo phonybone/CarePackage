@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: script
+# key: script
+# --
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+'''
+$1
+'''
+
+def main():
+    pass
+
+if __name__ == '__main__':
+    main()

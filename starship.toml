@@ -1,0 +1,23 @@
+format = "$env_var $git_branch$git_status $python $gcloud $kubernetes\n$directory$character"
+add_newline = true
+
+[directory]
+truncate_to_repo = false
+truncation_symbol = '.../'
+truncation_length = 3
+
+[git_status]
+style = "bold purple"
+
+[env_var.PSQL_URI_ENV]
+variable = "PSQL_URI_ENV"
+format = "rtb:[$env_value](red)"
+
+[kubernetes]
+disabled = false
+format = '[$symbol$context (cluster=$cluster) (ns=$namespace)]($style)'
+style = 'green'
+# format = '[(user=$user)](green)'
+# format = 'on [ (user=$user)($cluster in )$context \($namespace\)](green) '
+[kubernetes.context_aliases]
+"gke_.*_(?P<var_cluster>[\\w-]+)" = "gke-$var_cluster"

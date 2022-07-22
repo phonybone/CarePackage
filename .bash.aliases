@@ -1,7 +1,8 @@
+#-*-sh-*-
 alias ls='ls -FH'
 alias la='ls -FHA'
 alias ll='ls -FHl'
-alias lsd='ls -FH | grep \/'
+alias lsd="find . -type d -maxdepth 1 | grep -v '^\.$'"
 
 ##alias rm='/usr/local/scripts/safe_rm \!*'
 #unalias rm

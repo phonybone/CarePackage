@@ -315,30 +315,33 @@ function git-co-master {
     fi
 
     local files=$(find deploy -name '*.sops.yml')
-    desops sops ${files}
+    desopsify sops ${files}
 
     git switch -
 }
 
-function desops {
+function desopsify {
     # decrypt a list of sops files and write the results to disk, remove '.sops' from the input filename
-    local to_remove=$1
-    shift
+    # local to_remove=$1
+    # shift
     local files=$@
 
     for fn in $files; do
 	local base=$(basename $fn)
-	local parts=(${base//./ })
-	declare -a newparts=()
-	for part in ${parts[@]}; do
-	    if [[ "${part}" != "${to_remove}" ]] ; then
-		newparts+=($part)
-	    fi
-	done
-
 	local folder=$(dirname $fn)
-	local newfn=$(printf ".%s" "${newparts[@]}") 
-	local newpath="${folder}/${newfn:1}"
+
+	# local parts=(${base//./ })
+	# declare -a newparts=()
+	# for part in ${parts[@]}; do
+	#     if [[ "${part}" != "${to_remove}" ]] ; then
+	# 	newparts+=($part)
+	#     fi
+	# done
+
+	# local newfn=$(printf ".%s" "${newparts[@]}") 
+	# local newpath="${folder}/${newfn:1}"
+	local newpath=$(rm_elem "$base" .sops)
+	# echo sops -d "${fn}" \>${newpath}
 	sops -d "${fn}" >${newpath}
 	echo ${fn}
     done

@@ -4,18 +4,12 @@ function rm_stale_dockers() {
     docker images | grep '<none>' | cut -c41-52 | xargs docker rmi {}
 }
 
-function current_git_branch() {
-    br=`git branch 2>/dev/null | grep '^\*' | cut -f2 -d\  `
-    if [ "X$br" != "X" ] ; then
-	echo ${br}
-    else
-	echo
-    fi
-}
-
 function set_prompt() {
+    # echo set_prompt disabled
+    return
     exit_code=$?
     export PS1='\n\n[\h] {py::$(current_venv)} <$(current_git_branch)> (${exit_code})\n \w \$ '
+    # export PS1='\n\n[\h] {py::$(current_venv)} <$(current_git_branch)> -$(get_project)- (${exit_code})\n \w \$ '
 }
 
 # find all perl subs in a file
@@ -71,6 +65,11 @@ function upto() {
     fi
 }
 
+function get_abs_filename() {
+    # expand '../' and the like
+    # $1: relative filename
+    echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+}
 
 # Call mvn install:install-file to the local .m2 repo:
 function mvn-install() {
@@ -92,6 +91,13 @@ function here() {
     cd `/bin/pwd`
 }
 
+function cdls {
+    cd $1 && ls
+}
+
+function cdll {
+    cd $1 && ls -la
+}
 
 
 function nocomments () {
@@ -101,37 +107,68 @@ function nocomments () {
 function flask_here() {
     # work on the flask app rooted in this directory
     export PYTHONPATH=`pwd`
-
-    app_trgt=${1:-app.py}
-    echo looking for $app_trgt
-    if [[ -e ${app_trgt} ]] ; then
-	app_fn=$app_trgt
-    else
-	app_fn=$(find . -name ${app_trgt} | cut -c3-)
-	if [[ -z "$app_fn" ]]; then
-	    echo "No flask ${app_trgt} found, sorry"
-	    return
-	fi
-    fi
+    export LC_ALL=en_CA.UTF-8
+    export LANG=en_CA.UTF-8
+    app_fn=$(find . -name app.py | cut -c3-)
     export FLASK_APP=${app_fn}
 
     echo PYTHONPATH: $PYTHONPATH
     echo FLASK_APP: $FLASK_APP
-
 }
 
-function flask_env {
-    env_name=${1}
-    if [[ ! -z ${env_name} ]]; then
-	export FLASK_ENV=${env_name}
-	echo FLASK_ENV: $FLASK_ENV
-    fi
-}
-
-function play-ogg () {
-    canberra-gtk-play --file=$1
+function mknmv {
+    # create a new directory and move into it
+    mkdir -p $1 && cd $_
 }
 
 function show_path {
+    # display $(PATH) one dir/line
     tr ':' '\n' <<<$PATH
+}
+
+function cdl {
+    cd $1 && ll
+}
+
+function mkcd {
+    local tgt=$1
+    mkdir -p $tgt && cd $tgt
+}
+
+function strip_comments {
+    # reads from stdin; invoke as <input strip_comments
+    grep -v '^#' | grep -v '^$'
+}
+
+# Various string functions
+function join_by { local IFS="$1"; shift; echo "$*"; }
+
+function split_by {
+    local delim=$1
+    local str=$2
+    local parts=(${str//$delim/ })
+    for part in ${parts[@]}; do
+	echo $part
+    done
+}
+
+function add_elem_before {
+    local str=$1
+    local anchor=$2
+    local src=$3
+    echo ${str/$anchor/$src$anchor}
+}
+
+function add_elem_after {
+    local str=$1
+    local anchor=$2
+    local src=$3
+    echo ${str/$anchor/$anchor$src}
+}
+
+function rm_elem {
+    # remove $tgt from $str
+    local str=$1
+    local tgt=$2
+    echo ${str/$tgt/}
 }

@@ -14,14 +14,11 @@ import errno
 
 
 def main(opts):
-    ignore_rxs = getattr(opts, 'skip_dirs', [])
     if 'EXPLORE_IGNORE' in os.environ and not opts.all:
-        ignore_rxs += os.environ['EXPLORE_IGNORE'].split('|')
-        ignore_rx_pattern = '|'.join(ignore_rxs)
-        ignore_rx = re.compile(ignore_rx_pattern)
+        ignore_rx = re.compile(os.environ['EXPLORE_IGNORE'])
     else:
-        # ignore_rx = None
-        ignore_rx = re.compile(r'(?!)') # never matches;
+        ignore_rx = None
+        # ignore_rx = re.compile(r'(?!)') # never matches;
         # see https://stackoverflow.com/questions/1723182/a-regex-that-will-never-be-matched-by-anything
     
     for dirpath, dirnames, files in os.walk(opts.root):
@@ -64,7 +61,7 @@ def getopts():
     parser.add_argument('-f', '--full-paths', help='show full paths', action='store_true')
     parser.add_argument('-s', '--structure-only', help='only show directory structure', action='store_true')
     parser.add_argument('-a', '--all', help='display all paths regardless of ${EXPLORE_IGNORE}', action='store_true', default=False)
-    parser.add_argument('-x', dest='skip_dirs', help='append to ignore', action='append', default=[])
+
     opts=parser.parse_args()
     if opts.d:
         print(opts)

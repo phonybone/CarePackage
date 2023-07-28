@@ -71,6 +71,9 @@ alias kickss='touch ~/slimseq_phonybone/tmp/restart.txt'
 
 alias py=python
 alias py3=python3
+alias ipy=ipython
+alias pyhere="export PYTHONPATH=$(pwd)"
+
 alias antrun='ant -Dmain_class=\!:1 run'
 alias mongo_start='mongod --fork --dbpath /mnt/price1/vcassen/mongo_dbs/ --logpath /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log --logappend --port 27017; tail -f /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log'
 alias mongo_start_dist='mongod --fork --dbpath /mnt/price1/vcassen/mongo_dbs/ --logpath /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log --logappend --replSet geo --port 27017; tail -f /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log'
@@ -85,5 +88,6 @@ alias jserv='cd ~/l/Everest/Everest_job_service/job_service'
 alias pserv='cd ~/l/Everest/panel_service/panel_service'
 alias chomper='cd ~/l/Everest/Chomper'
 
-alias k8=kubectl
-alias tf=terraform
+alias isaid='sudo'
+
+alias k8='kubectl'

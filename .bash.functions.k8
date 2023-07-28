@@ -9,7 +9,8 @@ function get_pod {
     # get pods matching regex in $1
     local podname=$1
     local ns=$2
-    kubectl get pods -n "${ns}" | grep "${podname}" | cut -f1 -d\ 
+    kubectl get pods -n "${ns}" | grep "${podname}" | grep Running | cut -f1 -d\ | pbcopy
+    pbpaste
 }
 
 function login_pod {
@@ -34,7 +35,7 @@ function pod_logs {
 	return 1
     fi
     echo kubectl logs -n $ns $pod # "$@"
-    kubectl logs -n $ns $pod "$3"
+    kubectl logs -n $ns $pod "$3" | grep -v version
 }
 
 function pod_logsf {
@@ -49,10 +50,32 @@ function pod_logsf {
     kubectl logs -f -n $ns $pod "$3"
 }
 
+function grep_pod_logs {
+    local WHAT=$1
+    local NS=${2:-pupil-prod}
+    local SERVICE=${3:-zpp-api}
+
+    if [[ "${WHAT}" == "--help" ]]; then
+	echo 'usage: grep_pod_logs <what> <ns> <service>' >&2
+	return
+    fi
+
+    for pod in $(kubectl get pods -n ${NS} | grep ${SERVICE} | grep Running | cut -f 1 -d ' '); do 
+	echo --------------------------- 
+	echo $pod
+	echo --------------------------- 
+	kubectl logs ${pod} -c ${SERVICE} -n ${NS} | grep ${WHAT}
+    done
+}
+
 function connect_project {
     # this maybe should be named 'connect_cluster'
     local project="${1:=$(gcloud config get-value project)}"
     gcloud container clusters get-credentials vpc-native-working-1-kube-zonar --zone us-west1-a --project $project
+}
+
+function connect_working_na2 {
+    gcloud container clusters get-credentials zonar-working-na-2 --region us-west1 --project zonar-working-na-e22c
 }
 
 function k8-all-ns {

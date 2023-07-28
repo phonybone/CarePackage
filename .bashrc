@@ -39,20 +39,22 @@ done
 
 
 
-export PS1="[\h] <\$(current_git_branch)> ($?) \w\$ "
+export CDPATH=.:$HOME
+set cdpath=$HOME
 
 
 export EDITOR=`which emacs`
 
 bind 'set match-hidden-files off'
-export HISTCONTROL=ignoreboth
 
 # append to the history file, don't overwrite it
 shopt -s histappend
 
 # for setting history length see HISTSIZE and HISTFILESIZE in bash(1)
+HISTCONTROL=ignoreboth
 HISTSIZE=1000
 HISTFILESIZE=2000
+HISTTIMEFORMAT='%d/%m/%y %T '
 
 # check the window size after each command and, if necessary,
 # update the values of LINES and COLUMNS.
@@ -132,9 +134,9 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 # ~/.bash_aliases, instead of adding them here directly.
 # See /usr/share/doc/bash-doc/examples in the bash-doc package.
 
-if [ -f ~/.bash_aliases ]; then
-    . ~/.bash_aliases
-fi
+# if [ -f ~/.bash_aliases ]; then
+#     . ~/.bash_aliases
+# fi
 
 # enable programmable completion features (you don't need to enable
 # this, if it's already enabled in /etc/bash.bashrc and /etc/profile
@@ -144,21 +146,18 @@ if [ -f /etc/bash_completion ] && ! shopt -oq posix; then
 fi
 
 
+set_prompt
+
 export EDITOR=`which emacs`
 
 
+
 #THIS MUST BE AT THE END OF THE FILE FOR SDKMAN TO WORK!!!
-# (sdkman is some java thing)
-# export SDKMAN_DIR="/home/victor/.sdkman"
-# [[ -s "/home/victor/.sdkman/bin/sdkman-init.sh" ]] && source "/home/victor/.sdkman/bin/sdkman-init.sh"
+export SDKMAN_DIR="/home/victor/.sdkman"
+[[ -s "/home/victor/.sdkman/bin/sdkman-init.sh" ]] && source "/home/victor/.sdkman/bin/sdkman-init.sh"
 
 # The next line updates PATH for the Google Cloud SDK.
 if [ -f '/Users/victor.cassen/gsutil/google-cloud-sdk/path.bash.inc' ]; then source '/Users/victor.cassen/gsutil/google-cloud-sdk/path.bash.inc'; fi
 
 # The next line enables shell command completion for gcloud.
 if [ -f '/Users/victor.cassen/gsutil/google-cloud-sdk/completion.bash.inc' ]; then source '/Users/victor.cassen/gsutil/google-cloud-sdk/completion.bash.inc'; fi
-
-export NVM_DIR="/home/victor/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"  # This loads nvm
-
-complete -C /usr/bin/terraform terraform

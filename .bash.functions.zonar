@@ -109,14 +109,14 @@ function set_rtb {
     # find a rtb_db uri by decrypting the given sops file, then use it to connect to db
     # assumes gcp_sql proxy is already running
     local envn=$1
-    if [ -e $envn ]; then
+    if [ -e $envn ]; then	# are we trying to talk to a file? (see onroute_tool)
 	export PSQL_URI_ENV=file
 	export PSQL_URI=$1
 	echo ${PSQL_URI} | pbcopy
 	return
     fi
     
-    if [ $envn == 'local' ]; then
+    if [ $envn == 'local' ]; then # local rtb db
 	export PSQL_URI_ENV=local
 	export PSQL_URI='postgresql://localhost/route_board'
 	echo ${PSQL_URI} | pbcopy
@@ -124,6 +124,7 @@ function set_rtb {
 	return
     fi
 
+    # find the .sops.yml file that holds the pwd:
     local sops_file=${HOME}/zp/routeboard-api/deploy/${envn}/routeboard-api-env.secret.sops.yml
     if [[ ! -e $sops_file ]]; then
 	echo $sops_file: no such file
@@ -131,6 +132,7 @@ function set_rtb {
 	unset PSQL_URI_ENV
 	return 1
     fi
+
     local db_uri=$(sops_rtb_db_uri ${sops_file} | tr -d ' ')
     export PSQL_URI_ENV=$envn
     export PSQL_URI=${db_uri}

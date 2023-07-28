@@ -1,6 +1,7 @@
 #-*-sh-*-
 
 function rmis() {
+    # remove all images?
     docker image ls -a | perl -ane 'print "$F[2]\n";' | parallel docker image rm
 }
 
@@ -8,12 +9,36 @@ function rmcs {
     docker container ls -a | cut -f1 -d\ | grep -v CONTAINER | parallel docker container rm
 }
 
-function docker-exec {
-    # docker exec runs a command in a running container.
-    # This function looks through
-    filter=$1
-    id=$(docker ps --format "{{.ID}} {{.Names}}" | grep $filter | cut -f1 -d\ )
-    echo container=$id
-    docker exec -it $id /bin/bash 
+
+function launch-docker-psgs {
+    # run a postgres docker container
+    # see https://medium.com/@lvthillo/connect-from-local-machine-to-postgresql-docker-container-f785f00461a7
+    docker run -d -p 5432:5432 --name my-postgres -e POSTGRES_PASSWORD=password postgres:latest
 }
 
+function login-docker-psgs {
+    docker exec -it $1 /bin/bash
+}
+
+function local-psgs {
+    # does the same thing as login-docker-psgs, but gets you all the way in to the psql prompt:
+    psql -h localhost -p 5432 -U postgres -W
+}
+
+function examine-volume {
+    # launch a simple docker container with an attached volume for the purpose of inspecting the volume contents
+    # see https://stackoverflow.com/questions/34803466/how-to-list-the-content-of-a-named-volume-in-docker-1-9
+    volume=$1
+    docker run --rm -i -v=$1:/tmp/myvolume busybox
+}
+
+function docker-login {
+    container_name=$1
+    if [[ -z ${container_name} ]]; then
+	echo missing container name
+	return
+    fi
+    id=$(docker ps --format "{{.ID}} {{.Names}}" | grep "$container_name" | cut -f1 -d\ )
+    echo container $id
+    docker exec -it $id /bin/bash
+}

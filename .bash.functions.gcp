@@ -115,6 +115,14 @@ function gcp_sql_dev {
     gcp_sql ${project} ${database} ${nick}
 }
 
+function gcp_sql_can_dev {
+    # start the GCP SQL proxy using hard-coded params:
+    local project=rtb-dev-167405
+    local database=terraform-pupil-db-canada-dev
+    local nick=pupil-dev
+    gcp_sql ${project} ${database} ${nick}
+}
+
 function gcp_sql_qa {
     # start the GCP SQL proxy using hard-coded params:
     local project=rtb-dev-167405
@@ -248,7 +256,6 @@ function sops_extract_resource_id {
 
 }
 
-function join_by { local IFS="$1"; shift; echo "$*"; }
 
 function sops_recrypt {
     # $src should be a sops-encrypted file with '.sops' as the second to last extenstion

@@ -1,0 +1,51 @@
+#!/bin/bash
+#-*-sh-*-
+
+export ZADMIN_DEV_TUNNEL_LOCAL_PORT=5400
+export ZADMIN_DEV=postgresql://postgres:snator9@localhost:${ZADMIN_DEV_TUNNEL_LOCAL_PORT}/zadmin_dev
+export ZADMIN_DEV_TARGET=dev-zadmin.sea-001.zonarsystems.net:5432
+
+export ZADMIN_QA=postgresql://postgres:snator9@dev-db-003.sea-001.zonarsystems.net/zadmin
+export ZADMIN_QA_TUNNEL_LOCAL_PORT=5401
+export ZADMIN_QA_TARGET=qa-zadmin.sea-001.zonarsystems.net:5432
+
+export ZADMIN_CACHE=${HOME}/.zadmin/cache.txt
+
+function zadmin_tunnel {
+    local ENV=$(echo $1 | tr [a-z] [A-Z])
+    if [[ "${ENV}" == "QA" ]]; then # tunnel not needed
+	return
+    fi
+
+    local target_name=ZADMIN_${ENV}_TARGET
+    local target=${!target_name}
+    local port_name=ZADMIN_${ENV}_TUNNEL_LOCAL_PORT
+    local port=${!port_name}
+    zonar_tunnel ${target} ${port}
+}
+
+function zadmin_dev {
+    # connect to zadmin_dev
+    zonar_tunnel ${ZADMIN_DEV_TARGET} ${ZADMIN_DEV_TUNNEL_LOCAL_PORT}
+    psql postgresql://postgres:snator9@localhost:${ZADMIN_DEV_TUNNEL_LOCAL_PORT}/zadmin_dev
+}
+
+function zadmin_qa {
+    echo $ZADMIN_QA
+    psql $ZADMIN_QA
+}
+
+function zadmin_accounts {
+    # print all code, id for all accounts in given $env
+    local ENV=$(echo $1 | tr [a-z] [A-Z])
+    local varname=ZADMIN_${ENV}
+    psql ${!varname} -c 'SELECT code, id FROM v_accounts ORDER BY code'
+}
+
+function curl_zadmin {
+    local env=$1
+    local account=$2
+
+    local url="https://gtc-db-conn-service.${env}.zonarsystems.net/zadmin/get_gtc_account?account=${account}"
+    curl -s -X POST ${url} | jq '.data' | tr -d \" | pbcopy && pbpaste
+}

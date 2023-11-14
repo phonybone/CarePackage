@@ -6,6 +6,8 @@ export ZAPY_API_KEY_DEV='886b2331-2768-45c7-b2e1-464ad2d3a8e2'
 export ZAPY_API_KEY_STAGING='54dd94d1-4564-4d1b-9849-c88bde32e3e8'
 export ZAPY_API_KEY_PROD='213946ba-5f44-410d-98bd-aa6f7920d0ad'
 
+export ZPASS_ROOT=${HOME}/zp/APIs/zpass-api
+
 function zapy_api_key {
     # print the zapy-api key for a given $env
     local env=$(echo $1 | tr [:lower:] [:upper:])
@@ -14,72 +16,9 @@ function zapy_api_key {
     echo ${envval} 
 }
 
-function pylint_tests() {
-    # run pylint on all .py files under tests/
-    explore -f tests | grep '\.py$' | xargs pylint --rcfile pylintrc | l
-}
-
-function dpsql {
-    # connect to psql that is running under docker
-    # see https://medium.com/@lvthillo/connect-from-local-machine-to-postgresql-docker-container-f785f00461a7
-    usage="usage: dpsql <container_regex> <db>"
-    if [[ -z $1 || -z $2 ]]; then
-	echo $usage
-	return
-    fi
-    container_id=$(docker ps | grep $1 | perl -ane 'print $F[0]')
-    echo $container_id
-
-    docker exec -it $container_id psql -U postgres -d $2
-}
-
-
-
-# ssh into various rtb servers:
-function rtb-server {
-    envrn=${1:-dev}
-    if [[ "${envrn}" == "-h" ]]; then
-	echo 'usage: rtb-server <envrn> <app> <n> <user>'
-	echo 'defaults:'
-	echo 'envrn: dev [qa|prod]'
-	echo 'app: etl [app db]'
-	echo 'n: 1'
-	echo 'user: vcassen'
-	return 1
-    fi
-    app=${2:-etl}		# one of db, etl, or app
-    n=${n:-1}
-    user=${4:-vcassen}
-    server="${envrn}-rtb-${app}-00${n}.sea-001.zonarsystems.net"
-    echo \(LDAP password\)
-    ssh "${user}@${server}"
-}
-
-function dev-server {
-    echo LDAP password:
-    ssh vcassen@dev-app-001.sea-001.zonarsystems.net
-}
-
-
 function php_syntax {
     folder=${1-$PWD}
     find $folder -name '*.php' | xargs -t -L 1 php -l | grep -v 'No syntax error'
-}
-
-
-function gtc4_dev {
-    # log in to some gtc4 web server; doesn't work
-    ldap_pw
-    ssh -t vcassen@dev-gtc4-web-001.sea-001.zonarsystems.net "${cmd}"
-}
-
-
-function swipe {
-    # use cURL to generate a swipe; obsolete?
-    SERVER='sneigelgtc3dev'
-    ACCOUNT='dbr47_rep1023'
-    PISSWORD='rust.never.sleeps.79'
-    curl -k "https://${SERVER}.sea-001.zonarsystems.net/zmisc/addscan.php?environment=dev&account=${ACCOUNT}&gpsid=8505229&odometer=102453&rfid=4321&lat=47.258728&long=-122.465973&password=${PISSWORD}"
 }
 
 function findswipes {
@@ -98,25 +37,26 @@ function ldap_pw {
 function sops_rtb_db_uri {
     # extract DATABASE_URI from a sops file
     local sops_file=$1
+    local country=${2:-USA}
     if [[ ! -f ${sops_file} ]]; then
        echo "${sops_file}: no such file"
        return 1
     fi
-    sops --decrypt ${sops_file} | grep DATABASE_URI | cut -f2- -d\: | sed s/3306/5436/
+    sops --decrypt ${sops_file} | grep DATABASE_URI_${country} | cut -f2- -d\: | sed s/3306/5436/
 }
 
 function set_rtb {
     # find a rtb_db uri by decrypting the given sops file, then use it to connect to db
     # assumes gcp_sql proxy is already running
     local envn=$1
-    if [ -e $envn ]; then	# are we trying to talk to a file? (see onroute_tool)
+    if [ -e $envn ]; then
 	export PSQL_URI_ENV=file
 	export PSQL_URI=$1
 	echo ${PSQL_URI} | pbcopy
 	return
     fi
     
-    if [ $envn == 'local' ]; then # local rtb db
+    if [ $envn == 'local' ]; then
 	export PSQL_URI_ENV=local
 	export PSQL_URI='postgresql://localhost/route_board'
 	echo ${PSQL_URI} | pbcopy
@@ -124,20 +64,18 @@ function set_rtb {
 	return
     fi
 
-    # find the .sops.yml file that holds the pwd:
-    local sops_file=${HOME}/zp/routeboard-api/deploy/${envn}/routeboard-api-env.secret.sops.yml
+    local sops_file=${HOME}/zp/APIs/routeboard-api/deploy/${envn}/routeboard-api-env.secret.sops.yml
     if [[ ! -e $sops_file ]]; then
-	echo $sops_file: no such file
+	echo $sops_file: no such file...
 	unset PSQL_URI
 	unset PSQL_URI_ENV
 	return 1
     fi
-
     local db_uri=$(sops_rtb_db_uri ${sops_file} | tr -d ' ')
+    echo db_uri: ${db_uri}
     export PSQL_URI_ENV=$envn
     export PSQL_URI=${db_uri}
     echo ${db_uri} | pbcopy
-    echo ${db_uri}
 }
 
 function rtb_db_test {
@@ -166,6 +104,10 @@ function rtb_db_prod {
 function sops_mp_db_uri {
     # connect to MP db via cloud_sql_proxy (call gcp_sql_<env> first in different window)
     local envn=$1
+    if [[ ${envn} == 'local' ]]; then
+	echo master_plan
+	return
+    fi
     local sops_file=${HOME}/zp/Services/pupil-ingestion-service/deploy/${envn}/cloudsql-db-credentials.secret.sops.yml
     if [[ ! -f ${sops_file} ]]; then
 	echo ${sops_file}: no such file
@@ -174,21 +116,27 @@ function sops_mp_db_uri {
     local username=$(sops --decrypt ${sops_file} | grep username: | cut -f2 -d\: | tr -d ' ')
     local password=$(sops --decrypt ${sops_file} | grep password: | cut -f2 -d\: | tr -d ' ')
     local psql_uri=postgresql://${username}:${password}@localhost:5436/master_plan
-    echo $psql_uri
     export PSQL_URI=$psql_uri
+
+    echo $psql_uri
+}
+
+function mp_db {
+    local env=$1
+    local psql_uri=$(sops_mp_db_uri $env)
     psql $psql_uri
 }
 
 function mp_db_dev {
-    sops_mp_db_uri development
+    mp_db development
 }
 
 function mp_db_staging {
-    sops_mp_db_uri staging
+    mp_db staging
 }
 
 function mp_db_prod {
-    sops_mp_db_uri production
+    mp_db production
 }
 
 function zpass_db {
@@ -197,7 +145,7 @@ function zpass_db {
     # exports PSQL_URI as extracted from zpass-api-env according to $env
     local env=$1
     if [[ -z ${ZPASS_ROOT} ]] ; then
-	echo ZPASS_ROOT not set \(try .bashrc.local\)
+	echo ZPASS_ROOT not set
 	return 1
     fi
     local country=${2-US}
@@ -324,26 +272,13 @@ function git-co-master {
 
 function desopsify {
     # decrypt a list of sops files and write the results to disk, remove '.sops' from the input filename
-    # local to_remove=$1
-    # shift
+    # WIP
     local files=$@
 
     for fn in $files; do
 	local base=$(basename $fn)
 	local folder=$(dirname $fn)
-
-	# local parts=(${base//./ })
-	# declare -a newparts=()
-	# for part in ${parts[@]}; do
-	#     if [[ "${part}" != "${to_remove}" ]] ; then
-	# 	newparts+=($part)
-	#     fi
-	# done
-
-	# local newfn=$(printf ".%s" "${newparts[@]}") 
-	# local newpath="${folder}/${newfn:1}"
 	local newpath=$(rm_elem "$base" .sops)
-	# echo sops -d "${fn}" \>${newpath}
 	sops -d "${fn}" >${newpath}
 	echo ${fn}
     done

@@ -30,24 +30,3 @@ function git-current-sha {
     pbpaste
 }
 
-function git-rm-branches {
-    local mer_flag='--merged'
-    local del_flag='-d'
-    if [[ $1 == '-D' ]]; then
-	del_flag='-D'
-	mer_flag=''
-	shift
-    fi
-    local keep=(main $@)
-    local tgt=$(join-strs \| "${keep[@]}")
-
-    git branch $mer_flag | grep -v -E \($tgt\) | while read -r branch; do
-	git branch $del_flag $branch
-    done
-}
-
-function join-strs {
-    local IFS=$1
-    shift
-    echo "$*"
-}

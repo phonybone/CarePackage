@@ -1,11 +1,22 @@
 #-*-sh-*-
 # export ZADMIN_DEV=postgresql://postgres:snator9@dev-zadmin.sea-001.zonarsystems.net:5432/zadmin_dev
-export ZADMIN_DEV=postgresql://postgres:snator9@localhost:5400/zadmin_dev
-export ZADMIN_QA=postgresql://postgres:snator9@dev-db-003.sea-001.zonarsystems.net/zadmin
 export GTC_TUNNEL_LOCAL_PORT=5399
 
+export ZAPY_API_KEY_DEV='886b2331-2768-45c7-b2e1-464ad2d3a8e2'
+export ZAPY_API_KEY_STAGING='54dd94d1-4564-4d1b-9849-c88bde32e3e8'
+export ZAPY_API_KEY_PROD='213946ba-5f44-410d-98bd-aa6f7920d0ad'
+
+function zapy_api_key {
+    # print the zapy-api key for a given $env
+    local env=$(echo $1 | tr [:lower:] [:upper:])
+    local envvar="ZAPY_API_KEY_${env}"
+    local envval=${!envvar}
+    echo ${envval} 
+}
+
 function pylint_tests() {
-	 explore -f tests | grep '\.py$' | xargs pylint --rcfile pylintrc | l
+    # run pylint on all .py files under tests/
+    explore -f tests | grep '\.py$' | xargs pylint --rcfile pylintrc | l
 }
 
 function dpsql {
@@ -57,12 +68,14 @@ function php_syntax {
 
 
 function gtc4_dev {
+    # log in to some gtc4 web server; doesn't work
     ldap_pw
     ssh -t vcassen@dev-gtc4-web-001.sea-001.zonarsystems.net "${cmd}"
 }
 
 
 function swipe {
+    # use cURL to generate a swipe; obsolete?
     SERVER='sneigelgtc3dev'
     ACCOUNT='dbr47_rep1023'
     PISSWORD='rust.never.sleeps.79'
@@ -70,12 +83,14 @@ function swipe {
 }
 
 function findswipes {
+    # use cURL to trigger zapy-zpassplus find_swipes
     ACCOUNT='dbr47_rep1023'
     Z_ENV=dev
     curl -X POST -d "account=${ACCOUNT}" "https://zapy-zpassplus.${Z_ENV}.zonarsystems.net/zpassplus/find_swipes"
 }
 
 function ldap_pw {
+    # extract the ldap_pw from its secret location
     grep -A1 'LDAP password' ${HOME}/Dropbox/Zonar/hr-admin/hr-admin.org | tail -1 | tr -d '[:space:]' | pbcopy
     echo LDAP pw copied to clipboard
 }
@@ -183,14 +198,21 @@ function zpass_db {
 	echo ZPASS_ROOT not set \(try .bashrc.local\)
 	return 1
     fi
+    local country=${2-US}
     sops_file=${ZPASS_ROOT}/deploy/${env}/zpass-api-env.secret.sops.yml
-    local psql_uri=$(sops -d $sops_file | grep DATABASE_URI | cut -f2- -d: | sed 's/3306/5437/')
+    if [[ ! -e ${sops_file} ]]; then
+	echo ${sops_file}: no such file
+	return 1
+    fi
+
+    local psql_uri=$(sops -d $sops_file | grep "${country}_DATABASE_URI" | cut -f2- -d: | sed 's/3306/5437/')
+    
     if [[ -z $psql_uri ]]; then
 	echo failed to extract psql uri from $sops_file
 	return 1
     fi
     export PSQL_URI=${psql_uri}
-    echo $PSQL_URI
+    echo using $PSQL_URI
     psql ${PSQL_URI}
 }
 
@@ -202,10 +224,7 @@ function zpass_db_staging {
     zpass_db staging
 }
 
-function zadmin_qa {
-    echo $ZADMIN_QA
-    psql $ZADMIN_QA
-}
+
 
 function make_postgresql {
     # construct a postgres url
@@ -215,56 +234,6 @@ function make_postgresql {
     local port=$4
     local dbname=$5
     echo "postgresql://${dbuser}:${dbpasswd}@${server}:${port}/${dbname}"
-}
-
-function gtc_db_lookup {
-    # lookup connection parameters in zadmin for $env and $code
-    # creates tunnel to zadmin
-    local env=$(echo $1 | tr [a-z] [A-Z])
-    local code=$2
-
-    zadmin_tunnel $env
-    
-    local zadmin_url_name=ZADMIN_${env}
-    local zadmin_url=${!zadmin_url_name}
-    local -p params
-    # echo psql $ZADMIN_QA -c "select id, code, dbuser, dbpasswd, server_name, server_port, dbase from v_accounts where code='${code}'" 
-    local stuff=$(psql ${zadmin_url} -c "select id, code, dbuser, dbpasswd, server_name, server_port, dbase from v_accounts where code='${code}'" | head -3 | tail -1 | sed  's/\|/ /g')
-    if [ "${stuff}" == '(0 rows)' ] ; then
-	echo nothing found for account ${code}
-	return 1
-    fi
-    IFS=' ' read -r -a params <<<"${stuff}"
-    params=("${params[@]:2}")	# "shift" params by 2
-    echo ${params[@]}
-}
-
-function gtc_db {
-    # connect to a gtc db:
-    local env=$(echo $1 | tr [a-z] [A-Z])
-    local code=$2
-
-    # get connection params from zadmin:
-    local -p params
-    IFS=' ' read -r -a params <<<$(gtc_db_lookup $env $code)
-
-    # create gtc tunnel:
-    zonar_tunnel "${params[2]}":"${params[3]}" ${GTC_TUNNEL_LOCAL_PORT}
-
-    export PSQL_URI=$(make_postgresql ${params[0]} ${params[1]} localhost ${GTC_TUNNEL_LOCAL_PORT}  ${params[4]} ${params[5]})
-    echo PSQL_URI=$PSQL_URI
-    psql ${PSQL_URI}
-}
-
-function gtc_psql {
-    # print the postgresql:// uri for the given account
-    # does not "localize"
-    local env=$(echo $1 | tr [a-z] [A-Z])
-    local code=$2
-
-    local -p params
-    IFS=' ' read -r -a params <<<$(gtc_db_lookup $env $code)
-    make_postgresql ${params[@]}
 }
 
 function make_postico {
@@ -333,18 +302,6 @@ function update_sops {
     git commit -m "$(current_git_branch): updating sops"
 }
 
-function zadmin_dev {
-    # connect to zadmin_dev
-    zonar_tunnel ${ZADMIN_DEV_TARGET} ${ZADMIN_DEV_TUNNEL_LOCAL_PORT}
-    psql postgresql://postgres:snator9@localhost:${ZADMIN_DEV_TUNNEL_LOCAL_PORT}/zadmin_dev
-}
-
-function zadmin_accounts {
-    local ENV=$(echo $1 | tr [a-z] [A-Z])
-    local varname=ZADMIN_${ENV}
-    psql ${!varname} -c 'SELECT code, id FROM v_accounts ORDER BY code'
-}
-
 ########################################################################
 # git helpers
 function git-co-master {
@@ -385,4 +342,21 @@ function desops {
 	sops -d "${fn}" >${newpath}
 	echo ${fn}
     done
+}
+
+function git-tag-release {
+    local version=$1
+    if [[ -z "$version" ]] ; then
+	>&2 echo "usage: git-tag-release <version>"
+	return 1
+    fi
+    git checkout master
+    git pull origin master
+    git tag -a "$version" -m "Version ${version}"
+    git push origin --tags
+}
+
+function pup_jumpbox_dev {
+    gcloud container clusters get-credentials zonar-working-na-2 --zone us-west1 --project zonar-working-na-e22c
+    kubectl exec -it -n cassandra-tools-dev `kubectl get po -n cassandra-tools-dev -o custom-columns=:metadata.name` -- bash
 }

@@ -6,8 +6,9 @@ export PUPIL_DEV_ID=rtb-dev-167405
 export PUPIL_PROD_ID=pupil-prod
 # echo gcp
 
-export GCP_SQL_PROXY=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
+export GCP_SQL_PROXY=${HOME}/src/google-cloud-sdk/bin/cloud-sql-proxy
 export GCP_SQL_PID_FILE=${HOME}/etc/gcp_sql.pid
+mkdir -p ${HOME}/etc
 
 function use_cluster {
     cluster=$1
@@ -32,6 +33,9 @@ function get_creds {
 
     case $nick in
 	pupil-dev)
+	    sa_json=pupil-dev-owner-qa-sa.json
+	    ;;
+	pupil-qa)
 	    sa_json=pupil-dev-owner-qa-sa.json
 	    ;;
 	pupil-prod)
@@ -77,11 +81,13 @@ function gcp_sql {
 
     kill_gcp_sql
     
-    echo calling ${GCP_SQL_PROXY} --instances=${project}:us-west1:${database}=tcp:${port} 
+    echo calling ${GCP_SQL_PROXY} ${project}:us-west1:${database}=tcp:${port} 
 
     ${GCP_SQL_PROXY} \
-    --instances=${project}:us-west1:${database}=tcp:${port} \
-    --credential_file=${creds} &
+    --address 0.0.0.0 --port ${port} \
+    --credentials-file=${creds} \
+    ${project}:us-west1:${database} &
+
     echo $! >${GCP_SQL_PID_FILE}
     echo ${GCP_SQL_PID_FILE} written
 }
@@ -94,7 +100,7 @@ function kill_gcp_sql {
     local gcp_sql_pid=$(cat ${GCP_SQL_PID_FILE})
     if ps ${gcp_sql_pid} -o command | grep -q ${GCP_SQL_PROXY} ; then
 	kill ${gcp_sql_pid}
-	rm ${GCP_SQL_PID_FILE}
+	rm -f ${GCP_SQL_PID_FILE}
     fi
 }
 
@@ -141,7 +147,7 @@ function gcp_sql_prod {
 
 #     ${GCP_SQL_PROXY} \
 #     --instances=${project}:us-west1:${database}=tcp:${port} \
-#     --credential_file=$creds
+#     --credentials-file=$creds
 # }
 
 # function gcp_sql_rtb_prod {
@@ -155,7 +161,7 @@ function gcp_sql_prod {
 
 #     ${GCP_SQL_PROXY} \
 #     --instances=${project}:us-west1:${database}=tcp:${port} \
-#     --credential_file=$creds
+#     --credentials-file=$creds
 # }
 
 
@@ -175,6 +181,10 @@ function zpass_sql_dev {
     zpass_sql dev $PUPIL_DEV_ID
 }
 
+function zpass_sql_qa {
+    zpass_sql qa $PUPIL_DEV_ID
+}
+
 function zpass_sql_prod {
     zpass_sql prod $PUPIL_PROD_ID
 }
@@ -188,8 +198,8 @@ function zpp_sql_qa {
     port=5438
     creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
     ${gcp_sql_proxy} \
-    --instances=${project}:us-west1:${database}=tcp:${port} \
-    --credential_file=$creds
+    ${project}:us-west1:${database}=tcp:${port} \
+    --credentials-file=$creds
 }
     
 
@@ -200,7 +210,7 @@ function sops_encrypt {
     # Otherwise, go to GCP->Security->Cryptographic keys, choose the right
     # project (eg zonar-working), find the name of the project you're working
     # on (eg pupil-route-board), got to far-right vertical '...' menu, click
-    # on 'Copy Resource ID', and then manually edit away the 'cryptoKeyVersions/<version'
+    # on 'Copy Resource ID', and then manually edit away the 'cryptoKeyVersions/<version>'
     # bit at the end (ugh).
     local gcp_key=$(pbpaste)
     echo encrypting using ${gcp_key}

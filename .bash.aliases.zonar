@@ -30,5 +30,13 @@ alias drs_zadmin_db='docker exec -it $(docker ps -aqf "name=daily-route-service_
 # ssh in to various servers:
 alias rtb-dev_etl='ssh vcassen@dev-rtb-etl-001.sea-001.zonarsystems.net'
 alias rtb-qa-etl='ssh vcassen@qa-rtb-etl-001.sea-001.zonarsystems.net'
+alias rtb-app-001='ssh vcassen@rtb-app-001.sea-001.zonarsystems.net'
 alias tbt-mp-db='psql -h localhost -p 5436 -U master_plan_user master_plan'
-alias dev-mw='ssh vcassen@dev-mw-001.sea-001.zonarsystems.net'
+alias dev-mw1='ssh vcassen@dev-mw-001.sea-001.zonarsystems.net'
+alias dev-mw2='ssh vcassen@dev-mw-002.sea-001.zonarsystems.net'
+alias dev-zapy1='ssh vcassen@dev-zapy-001.sea-001.zonarsystems.net'
+alias dev-zapy2='ssh vcassen@dev-zapy-002.sea-001.zonarsystems.net'
+alias dev-gtc-web='ssh vcassen@dev-gtc-web-003.sea-001.zonarsystems.net'
+
+alias gtc-dbr47-tunnel='zonar_tunnel 10.131.40.64:5432 5445'
+alias gtc-dbr47-db='psql postgresql://rep1023:rep1023@localhost:5445/dbr47_rep1023'

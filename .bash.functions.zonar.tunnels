@@ -1,0 +1,87 @@
+#-*-sh-*-
+export LDAP_USERNAME=vcassen
+export ZADMIN_DEV_TUNNEL_LOCAL_PORT=5400
+export ZADMIN_DEV_TARGET=dev-zadmin.sea-001.zonarsystems.net:5432
+export ZONAR_TUNNEL_PROXY=dev-zapy-001.sea-001.zonarsystems.net
+
+# export ZADMIN_QA_TUNNEL_LOCAL_PORT=5401
+
+export GTC_DB_DEV_TUNNEL_LOCAL_PORT=5402
+export GTC_DB_QA_TUNNEL_LOCAL_PORT=5403
+
+function zonar_tunnel {
+    local target=$1
+    local local_port=$2
+    local verbose=$3
+    if [[ "$verbose" == "-v" ]]; then
+	echo $target
+    fi
+    local options='-oHostKeyAlgorithms=+ssh-dss'
+
+    kill_tunnel ${local_port}
+
+    ldap_pw
+    # local proxy='vcassen@dev-zing-import-001.sea-001.zonarsystems.net'
+    local proxy=${ZONAR_TUNNEL_PROXY}
+    # echo tunneling to ${target} via proxy ${proxy}
+    if [[ "$verbose" == "-v" ]]; then
+	echo ssh -N -f -L ${local_port}:${target} ${LDAP_USERNAME}@${proxy} ${options}
+    fi
+    
+    # ssh -N -f -L ${local_port}:${target} ${proxy} ${options}
+    ssh -N -f -L ${local_port}:${target} ${LDAP_USERNAME}@${proxy} ${options}
+    if [ "$?" == 0 -a "$verbose" == "-v" ]; then
+	echo tunnel established
+    fi
+}
+
+function kill_tunnel {
+    local port=$1
+    lsof -i :${port} | grep '^ssh' | awk '{print $2}' | uniq | xargs kill
+}
+
+function kill_tunnels {
+    ps aux | grep ssh | grep -e -L | awk '{print $2}' | xargs kill
+}
+
+function show_tunnel {
+    ps aux | grep ssh | grep -e -L
+}
+
+
+########################################################################
+# specific tunnels
+function zadmin_tunnel {
+    local ENV=$(echo $1 | tr [a-z] [A-Z])
+    if [[ -z "${ENV}" ]] ; then
+	echo usage: zadmin_tunnel '<env>'
+	return 1
+    fi
+    if [[ "${ENV}" == "QA" ]]; then # tunnel not needed
+	return
+    fi
+
+    local target_name=ZADMIN_${ENV}_TARGET
+    local target=${!target_name}
+    local port_name=ZADMIN_${ENV}_TUNNEL_LOCAL_PORT
+    local port=${!port_name}
+    zonar_tunnel ${target} ${port}
+}
+
+# not sure who uses this anymore...
+function dev_tunnel {
+    local target='dev-gtc-db-0015.gtc-db-dev.zonarsystems.net:5432'
+    local verbose=$2
+    local port=${1:-5433}
+    echo zonar_tunnel $target $port $verbose
+    zonar_tunnel $target $port $verbose
+}
+
+# not sure who uses this anymore...
+function qa_tunnel {
+    local target='qa-gtc-db-0003.gtc-db-qa.zonarsystems.net:5432'
+    local port=${1:-5433}
+    local verbose=$2
+    zonar_tunnel $target $port $verbose
+}
+

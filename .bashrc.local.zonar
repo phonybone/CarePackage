@@ -1,4 +1,4 @@
-#-*-bash-*-
+#-*-sh-*-
 PG_BIN="/Applications/Postgres.app/Contents/Versions/9.6/bin"
 
 alias psql="${PG_BIN}/psql -U postgres"
@@ -33,3 +33,17 @@ function use_db() {
     echo $SQLALCHEMY_DATABASE_URI
 }
        
+export ZING_HOST=fga_route.zonarsystems.net
+export ZING_USER=fga_route_sftp
+export ZING_PWD=99jan!0ll5
+# get pod ids from `gcloud compute
+
+export ZING_POD_PROD=zing-import-zing-prod-na-667t
+export ZING_PROJECT_ID_DEV=zing-imports-app-dev-na-2d19
+export ZING_PROJECT_ID_PROD=zing-imports-app-prod-na-b7f1
+export ZING_ZONE=us-west1-b
+
+# export ZING_POD_DEV=$(find_vm zing-import-zing ${ZING_PROJECT_ID_DEV})
+# echo found ZING_POD_DEV=${ZING_POD_DEV}
+# export ZING_POD_PROD=$(find_vm zing-import-zing ${ZING_PROJECT_ID_PROD})
+# echo found ZING_POD_PROD=${ZING_POD_PROD}

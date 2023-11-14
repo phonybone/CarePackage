@@ -1,0 +1,56 @@
+#!/bin/bash
+# https://gitlab.com/ZonarSystems/pupil/tools/zmisc-tools/-/tree/main/regression-testing#zapyzpass-data-parity-step-3
+
+function sft_token {
+    curl --location --request POST 'https://qa-zonar-rider-verification.auth0.com/oauth/token?=test' \
+	 --header 'Content-Type: application/x-www-form-urlencoded' \
+	 --header 'Cookie: did=s%3Av0%3Adedca4c0-b637-11ea-a6b8-adc8baca2a1a.x9jpR%2Bcey4cq4yOUgUmlKhZeRVgXy%2BIKOClvQIRyl6Y; did_compat=s%3Av0%3Adedca4c0-b637-11ea-a6b8-adc8baca2a1a.x9jpR%2Bcey4cq4yOUgUmlKhZeRVgXy%2BIKOClvQIRyl6Y; __cfduid=d1afff284b432449783ab402ae6006c1a1614724651' \
+	 --data-urlencode 'grant_type=http://auth0.com/oauth/grant-type/password-realm' \
+	 --data-urlencode 'client_id=GoyTVcJyR3zu-zKHIbGczlqTHTRQKyv9' \
+	 --data-urlencode 'audience=https://rtb-app-qa.sea-001.zonarsystems.net/' \
+	 --data-urlencode 'username=8@seattlefieldtest.com' \
+	 --data-urlencode 'realm=Username-Password-Authentication' \
+	 --data-urlencode 'password=1111'
+}
+
+function dan_testenv_token {
+    curl --request POST \
+	 --url 'https://dev-zonar-rider-verification.auth0.com/oauth/token' \
+	 --header 'content-type: application/x-www-form-urlencoded' \
+	 --data grant_type=http://auth0.com/oauth/grant-type/password-realm \
+	 --data username=dan@testenv.com \
+	 --data password=Password1 \
+	 --data audience=https://rtb-app-dev.sea-001.zonarsystems.net \
+	 --data client_id=zk5x34L4R2cMErlacyzJNbm8vFKCNxQg \
+	 --data scope='openid email offline_access' \
+	 --data realm=Username-Password-Authentication
+}
+
+function joel_token {
+    curl --request POST \
+	 --url 'https://zonar-dev.auth0.com/oauth/token' \
+	 --header 'content-type: application/x-www-form-urlencoded' \
+	 --data grant_type=http://auth0.com/oauth/grant-type/password-realm \
+	 --data username=joe1account@ourcustomer.com \
+	 --data password=Password1 \
+	 --data audience=http://apidev.zonarsystems.net/ \
+	 --data client_id=C7wugpf1Itf0R2FsphsrIZINiHb3w6yA \
+	 --data client_secret=hNpCikX7o1q8qPfa7zM8_1jvesIkY7HEtuYhf6WxDb_2Hc0IeWhQR3byXRfVGdRJ \
+	 --data scope='openid email' \
+	 --data realm=Username-Password-Authentication
+}
+
+function joel_any_token {
+    curl --request POST \
+	 --url 'https://zonar-dev.auth0.com/oauth/token' \
+	 --header 'content-type: application/x-www-form-urlencoded' \
+	 --data grant_type=http://auth0.com/oauth/grant-type/password-realm \
+	 --data username=joemanyaccounts@ourcustomer.com \
+	 --data password=Password1 \
+	 --data audience=http://apidev.zonarsystems.net/ \
+	 --data client_id=C7wugpf1Itf0R2FsphsrIZINiHb3w6yA \
+	 --data client_secret=hNpCikX7o1q8qPfa7zM8_1jvesIkY7HEtuYhf6WxDb_2Hc0IeWhQR3byXRfVGdRJ \
+	 --data scope='openid email' \
+	 --data realm=Username-Password-Authentication
+}
+

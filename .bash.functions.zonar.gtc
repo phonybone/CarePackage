@@ -1,0 +1,23 @@
+# -*- sh -*-
+# functions for Zonar GTC work
+# see https://gitlab.com/ZonarSystems/gtc/GTC4#branch-level-environments
+# also, run the following exactly once before these work:
+# gcloud compute os-login ssh-keys add --key-file ~/.ssh/id_rsa.pub --project=gtc-app-dev-na-ec6d
+
+export GTC_DEV_PROJECT='gtc-app-dev-na-ec6d'
+TUNNEL_PORT=6666
+DEFAULT_ZONE=us-west1-a
+
+function gtc3_vm_tunnel {
+    # use gcloud to set up a tunnel into a GTC3 dev instance
+    local branch_instance=$1
+    local zone=${2:-${DEFAULT_ZONE}}
+    local port=${3:-6666}
+    gcloud compute start-iap-tunnel ${branch_instance} 22 --project=${GTC_DEV_PROJECT} --zone=${zone} --local-host-port=localhost:${port}
+}
+
+function ssh_gtc3 {
+    # use gcloud to ssh into a GTC3 VM:
+    local branch_instance=$1
+    gcloud compute ssh --project=${GTC_DEV_PROJECT} --zone=${DEFAULT_ZONE} ${branch_instance}
+}

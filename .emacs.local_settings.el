@@ -26,7 +26,7 @@
 (setq inhibit-flash-screen t)
 (tool-bar-mode -1)
 (menu-bar-mode 1)
-(global-linum-mode t)
+(global-display-line-numbers-mode)
 
 
 (global-set-key [home]   'beginning-of-buffer) 

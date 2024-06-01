@@ -1,88 +1,32 @@
+#-*-sh-*-
 alias ls='ls -FH'
 alias la='ls -FHA'
 alias ll='ls -FHl'
-alias lsd='ls -FH | grep \/'
+alias lsd="find . -type d -maxdepth 1 | grep -v '^\.$'"
 
-##alias rm='/usr/local/scripts/safe_rm \!*'
-#unalias rm
 
-##alias=psgrep 'ps auxww | grep \!*'
 alias psless='ps -auxww | less'
-#alias histgrep='history | grep \!*'
 alias l='less -X'
 alias so=source
 
-
-alias ftp='ftp -i'
 alias du='du -h'
-
-# cynvenio SSH's:
-alias cynvenio="ssh everest@${CYNVENIO_DEV_BOX_IP-24.43.144.189}"
-alias storm="ssh victor@storm.victorcassen.com"
-alias everest5="ssh everest@${EVEREST5}"
-alias everest6="ssh everest@${EVEREST6}"
-alias orion="ssh orion@10.100.100.211"         
-alias tencent="ssh root@${TENCENT}"
-alias willow="ssh everest@willow"
-alias 'aws-micro'="ssh -i ${HOME}/.ssh/Everest-aws.pem ec2-user@ec2-52-38-86-11.us-west-2.compute.amazonaws.com"
-alias 'aws-large'="ssh -i ${HOME}/.ssh/Everest-aws.pem ec2-user@ec2-54-70-180-87.us-west-2.compute.amazonaws.com"
-
 alias dict='l /usr/share/dict/words'
-#alias xterm='xterm \!* -e tcsh'
 
-alias wwwac='tail -f /usr/local/apache/logs/access_log'
-alias weberrors='tail -f /workspace/vcassen/TACO/logs/t1dbase-error_log | /users/vcassen/bin/filter_logs'
-
-#alias kickwww='kill -HUP `cat /var/run/httpd.pid`; tail -f /var/log/httpd/error_log'
-alias kick_slimseq='touch /net/dblocal/apps/SLIMarray/rails/cap_slimarray_staging/slimseq_phonybone/tmp/restart.txt'
-
-alias briefStatus='cvs status |& egrep "^\?|Status" | grep -v Up-to-date'
-alias cvsupdate='cvs -q update -dP | ~/bin/update_filter.pl'
-alias cvsrm='rm \*!; cvs remove \*!'
-#alias cvscobranch='cvs -z3 -d:ext:phonybone@cvs.sourceforge.net:/cvsroot/isbiology co -r release_2_5_branch_20060116 \!*'
-alias cvsfala='cvs -z3 -d:ext:vcassen@fala.systemsbiology.net:/home/vcassen/cvs_repository'
-alias cvsmcs='cvs -z3 -d:ext:motorcy7@motorcyclesoccer.com:/home/motorcy7/cvs_repository'
-alias git-night='git status | grep modified | cut -f2 -d: | xargs git commit -m "nightly upload"; git push'
-
-#alias subs='egrep "^sub |__END__" \!*'
-#alias defs='egrep "^\s*def " \!*'
-#alias perlman='perldoc `findPackage \!*`'
-alias dust="find . -name '*~*' -print -exec rm {} \; ; find . -name '.#*' -print -exec rm {} \; ; find . -name 'core.[0-9]*' -exec rm {} \;"
-alias dusttest="find . -name '*~*' ; find . -name '.#*' ; find . -name 'core.[0-9]*'"
-#alias ds2=     "find . -name '*~*' -exec du -H {}\; ; echo done"
-#alias ds2="find . -name '*~*' -exec du -H {} \; -exec rm {} \; ; echo done"
-
-#alias run_last="source ~/bin/run_last \!*"
 alias pd=pushd
 alias pd1='pushd +1'
 alias pd2='pushd +2'
 alias dirs='dirs -v'
 alias 'cd..'='cd ..'
-#alias firefox='~/bin/firefox/firefox >& /dev/null &'
-#alias firefox_dev='~/bin/firefox/firefox -P dev &'
-
-alias synergy='~/bin/bin/synergys --config ~/bin/.synergy.conf'
-alias qopera='opera >& /dev/null &'
-#alias qfirefox='~/bin/firefox/firefox >& /dev/null &'
-
-alias slimsql='mysql -h deimos -u root -p slimseq_staging'
-alias kickss='touch ~/slimseq_phonybone/tmp/restart.txt'
 
 alias py=python
 alias py3=python3
-alias antrun='ant -Dmain_class=\!:1 run'
-alias mongo_start='mongod --fork --dbpath /mnt/price1/vcassen/mongo_dbs/ --logpath /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log --logappend --port 27017; tail -f /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log'
-alias mongo_start_dist='mongod --fork --dbpath /mnt/price1/vcassen/mongo_dbs/ --logpath /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log --logappend --replSet geo --port 27017; tail -f /mnt/price1/vcassen/mongo_dbs/logs/mongodb.log'
-
+alias ipy=ipython
+alias pyhere="export PYTHONPATH=$(pwd)"
 
 alias passwords='ansible-vault view ~/Dropbox/random/words/passwords.yml | less'
 alias passwords_e='ansible-vault edit ~/Dropbox/random/words/passwords.yml'
 
-alias gui='cd ~/l/Everest/Everest_GUI_service/gui_service'
-alias ec='cd ~/l/Everest/Everest_core/everest_core'
-alias jserv='cd ~/l/Everest/Everest_job_service/job_service'
-alias pserv='cd ~/l/Everest/panel_service/panel_service'
-alias chomper='cd ~/l/Everest/Chomper'
+alias isaid='sudo'
 
-alias k8=kubectl
-alias tf=terraform
+alias k8='kubectl'
+alias tf='terraform'

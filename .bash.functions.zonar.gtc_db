@@ -1,0 +1,58 @@
+#-*-sh-*-
+export LDAP_USERNAME=vcassen
+export TUNNEL_PROXY=dev-zapy-002.sea-001.zonarsystems.net
+export GTC_TUNNEL_LOCAL_PORT=5402
+export GTC_GCP_PROJECT_NAME=gtc-app-dev-na-ec6d
+
+
+
+########################################################################
+
+function gtc_db_lookup {
+    # lookup connection parameters in zadmin for $env and $code
+    # creates tunnel to zadmin
+    local env=$(echo $1 | tr [a-z] [A-Z])
+    local code=$2
+
+    zadmin_tunnel $env
+    
+    local zadmin_url_name=ZADMIN_${env}
+    local zadmin_url=${!zadmin_url_name}
+    local -p params
+    local stuff=$(psql ${zadmin_url} -c "select id, code, dbuser, dbpasswd, server_name, server_port, dbase from v_accounts where code='${code}'" | head -3 | tail -1 | sed  's/\|/ /g')
+    if [ "${stuff}" == '(0 rows)' ] ; then
+	echo nothing found for account ${code}
+	return 1
+    fi
+    IFS=' ' read -r -a params <<<"${stuff}"
+    params=("${params[@]:2}")	# "shift" params by 2
+    echo ${params[@]}
+}
+
+function gtc_db {
+    # connect to a gtc db:
+    local env=$(echo $1 | tr [a-z] [A-Z])
+    local code=$2
+
+    # get connection params from zadmin:
+    local -p params
+    IFS=' ' read -r -a params <<<$(gtc_db_lookup $env $code)
+
+    # create gtc tunnel:
+    zonar_tunnel "${params[2]}":"${params[3]}" ${GTC_TUNNEL_LOCAL_PORT}
+
+    export PSQL_URI=$(make_postgresql ${params[0]} ${params[1]} localhost ${GTC_TUNNEL_LOCAL_PORT}  ${params[4]} ${params[5]})
+    echo PSQL_URI=$PSQL_URI
+    psql ${PSQL_URI}
+}
+
+function gtc_psql {
+    # print the postgresql:// uri for the given account
+    # does not "localize"
+    local env=$(echo $1 | tr [a-z] [A-Z])
+    local code=$2
+
+    local -p params
+    IFS=' ' read -r -a params <<<$(gtc_db_lookup $env $code)
+    make_postgresql ${params[@]}
+}

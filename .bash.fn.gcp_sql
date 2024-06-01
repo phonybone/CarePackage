@@ -1,0 +1,148 @@
+#-*-sh-*-
+# Bash functions relating to Google Cloud Platform
+echo gcp_sql
+
+os=$(uname)
+case "${os}" in
+    Darwin)
+	cb_copy=pbcopy
+	cb_paste=pbpaste
+	;;
+    Linux)
+	cb_copy='xclip -selection=clipboard -in'
+	cb_paste='xclip -selection=clipboard -out'
+	;;
+    *)
+	echo unknown OS: $os
+	echo "don't know how to access clipboard"
+	;;
+esac
+
+
+function gcp_sql {
+    # start the GCP SQL proxy using hard-coded params:
+    local gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
+
+    # project=rtb-dev-167405
+    project=$1
+    #database=terraform-pupil-db-${db}
+    database=$2
+    # port=5436
+    port=$3
+    #creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
+    creds=$4
+    pass=$5
+
+    if [[ ! -z ${pass} ]]; then
+	echo ${pass} | $cb_copy
+    fi
+    # echo psql -h localhost -p 5436 -U master_plan_user master_plan
+    # echo or \'tbt-mp-db\'
+    
+    ${gcp_sql_proxy} \
+    --instances=${project}:us-west1:${database}=tcp:${port} \
+    --credential_file=$creds
+}
+
+# route-board db
+# rtb_user:HPyppMqSvElwuA1
+
+
+function gcp_sql_dev2 {
+    # connect to master_plan/dev
+    # echo password | $cb_copy
+    
+    database=terraform-pupil-db-dev
+    project=rtb-dev-167405
+    port=5436
+    creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
+    pass=password
+    gcp_sql ${project} ${database} ${port} ${creds} ${pass}
+}
+
+function gcp_sql_qa {
+    echo password | $cb_copy	# password=password
+    gcp_sql qa
+}
+
+function gcp_sql_prod {
+    # start the GCP SQL proxy using hard-coded params:
+    db=prod
+    local gcp_sql_proxy=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
+    project=pupil-prod
+    database=terraform-pupil-db-${db}
+    port=5436
+    creds=${HOME}/.ssh/pupil-dev-owner-${db}-sa.json
+
+    echo psql -h localhost -p 5436 -U master_plan_user master_plan
+    echo or \'tbt-mp-db\'
+    echo 3dzgpAmFK6RZrhdF | $cb_copy
+
+    ${gcp_sql_proxy} \
+    --instances=${project}:us-west1:${database}=tcp:${port} \
+    --credential_file=$creds
+}
+
+function sops_encrypt {
+    # this function depends on having the gcp_key available from pbpaste
+    gcp_key=$(pbpaste)
+    echo encrypting using ${gcp_key}
+    src=$1
+    dst=$(insert_elem $1 sops)	# insert_elem defined in ~victor/bin/insert_elem
+
+    tmpfile=$(mktemp)
+
+    OLD_CREDS=$GOOGLE_APPLICATION_CREDENTIALS
+    unset GOOGLE_APPLICATION_CREDENTIALS
+
+    sops --encrypt --gcp-kms ${gcp_key} $src >$tmpfile
+    ok=$?
+
+    if [[ -n "$OLD_CREDS" ]]; then
+	export GOOGLE_APPLICATION_CREDENTIALS=$OLD_CREDS
+    fi
+    
+    if [[ "$ok" != 0 ]]; then
+	echo unable to encrypt $src, aborting
+	return 1
+    fi
+
+    mv $tmpfile $dst
+    echo $dst written
+}
+
+function use_project {
+    env=$1
+    case $env in
+	dev|qa|stag)
+	    proj=rtb-dev-167405
+	    ;;
+	prod)
+	    proj=pupil-prod
+	    ;;
+	*)
+	    echo bad 'env': $env
+	    return 1
+	    ;;
+    esac
+    gcloud config set project $proj
+    gcloud config list
+}
+
+function gcloud-login {
+    gcloud auth application-default login
+}
+
+function gcloud-set-project {
+    project=${1:-zonar-working}
+    gcloud container clusters get-credentials vpc-native-working-1-kube-zonar --zone us-west1-a --project $project
+}
+
+function cass-dev {
+    echo once connected do \'cassandra-cli\'
+    echo once cassandra-cli entered, connect to server
+    pods=$(kubectl get po -n cassandra-tools-dev -o custom-columns=:metadata.name)
+    kubectl -it -n cassandra-tools-dev "$pods" bash
+}
+
+

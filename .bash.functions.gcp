@@ -1,102 +1,207 @@
 #-*-sh-*-
+export GCP_REGEION=us-west1
+export GCP_ZONE=us-west1-a
+
 export PUPIL_DEV_ID=rtb-dev-167405
 export PUPIL_PROD_ID=pupil-prod
-echo gcp
+# echo gcp
 
-export GCP_SQL_PROXY=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
+export GCP_SQL_PROXY=${HOME}/src/google-cloud-sdk/bin/cloud-sql-proxy
+export GCP_SQL_PID_FILE=${HOME}/etc/gcp_sql.pid
+mkdir -p ${HOME}/etc
 
+function use_cluster {
+    cluster=$1
+    region=$2
+    project=$3
+    gcloud container clusters get-credentials ${cluster} --region ${region} --project ${project}
+    # gcloud container clusters get-credentials zonar-working-na-2 --region us-west1 --project zonar-working-na-e22c 
+}
+
+function use_zonar_working {
+    use_cluster zonar-working-na-2 us-west1 zonar-working-na-e22c
+}
+
+function use_zonar_prod {
+    use_cluster zonar-production-na-2 us-west1 zonar-production-na-0b8a
+}
+
+function get_creds {
+    # map credential files by nickname:
+    local nick=$1
+    local sa_json
+
+    case $nick in
+	pupil-dev)
+	    sa_json=pupil-dev-owner-qa-sa.json
+	    ;;
+	pupil-qa)
+	    sa_json=pupil-dev-owner-qa-sa.json
+	    ;;
+	pupil-prod)
+	    sa_json=pupil-owner-prod-sa.json
+	    ;;
+	onroute-dev)
+	    sa_json=pupil-dev-onroute-sa.json
+	    ;;
+	onroute-prod)
+	    sa_json=pupil-prod-9f709cc219e3.json
+	    ;;
+	verify-dev)
+	    sa_json=verify-images.pupil-dev.key.json
+	    ;;
+	verify-prod)
+	    sa_json=verify-images.pupil-prod.key.json
+	    ;;
+	zing-prod)
+	    sa_json=zing-imports.sa.json
+	    ;;
+	cf-sandbox)
+	    sa_json=cf-sandbox-rtb-dev.json
+	    ;;
+	*)
+	    echo no creds file for $nick
+	    return 1
+	    ;;
+    esac
+    echo ${HOME}/.ssh/${sa_json}
+}
 
 function gcp_sql {
     # start the GCP SQL proxy
     local project=$1
     local database=$2
-    local creds=${HOME}/.ssh/${3}
+    local nick=$3
+    local creds=$(get_creds $nick)
     if [[ ! -f ${creds} ]]; then
 	echo ${creds}: no such file
 	return 1
     fi
     local port=${4:-5436}
 
-
-    # local GCP_SQL_PROXY=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
-
-    echo ${GCP_SQL_PROXY} --instances=${project}:us-west1:${database}=tcp:${port} 
+    kill_gcp_sql
+    
+    echo calling ${GCP_SQL_PROXY} ${project}:us-west1:${database}=tcp:${port} 
 
     ${GCP_SQL_PROXY} \
-    --instances=${project}:us-west1:${database}=tcp:${port} \
-    --credential_file=${creds}
+    --address 0.0.0.0 --port ${port} \
+    --credentials-file=${creds} \
+    ${project}:us-west1:${database} &
+
+    echo $! >${GCP_SQL_PID_FILE}
+    echo ${GCP_SQL_PID_FILE} written
+}
+
+function kill_gcp_sql {
+    if [[ ! -e ${GCP_SQL_PID_FILE} ]]; then
+	return
+    fi
+    
+    local gcp_sql_pid=$(cat ${GCP_SQL_PID_FILE})
+    if ps ${gcp_sql_pid} -o command | grep -q ${GCP_SQL_PROXY} ; then
+	kill ${gcp_sql_pid}
+	rm -f ${GCP_SQL_PID_FILE}
+    fi
 }
 
 function gcp_sql_test {
     # start the GCP SQL proxy using hard-coded params:
     local project=rtb-dev-167405
     local database=terraform-pupil-db-test
-    local creds=pupil-dev-owner-qa-sa.json
+    local nick=pupil-dev
     local port=3306
-    gcp_sql ${project} ${database} ${creds} ${port}
+    gcp_sql ${project} ${database} ${nick} ${port}
 }
 
 function gcp_sql_dev {
     # start the GCP SQL proxy using hard-coded params:
     local project=rtb-dev-167405
     local database=terraform-pupil-db-dev
-    local creds=pupil-dev-owner-qa-sa.json
-    gcp_sql ${project} ${database} ${creds}
+    local nick=pupil-dev
+    gcp_sql ${project} ${database} ${nick}
 }
 
 function gcp_sql_qa {
     # start the GCP SQL proxy using hard-coded params:
     local project=rtb-dev-167405
     local database=terraform-pupil-db-qa
-    local creds=pupil-dev-owner-qa-sa.json
-    gcp_sql ${project} ${database} ${creds}
+    local nick=pupil-dev
+    gcp_sql ${project} ${database} ${nick}
 }
 
 function gcp_sql_prod {
     # start the GCP SQL proxy using hard-coded params:
     local project=pupil-prod
     local database=terraform-pupil-db-prod
-    local creds=pupil-dev-owner-prod-sa.json
-    gcp_sql ${project} ${database} ${creds}
+    local nick=pupil-prod
+    gcp_sql ${project} ${database} ${nick}
 }
 
-function gcp_sql_rtb_dev {
-    # start the GCP SQL proxy using hard-coded params:
-    db=dev
-    project=pupil-dev
-    database=route_board
-    port=5436
-    creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
+# function gcp_sql_rtb_dev {
+#     # start the GCP SQL proxy using hard-coded params:
+#     db=dev
+#     project=pupil-dev
+#     database=route_board
+#     port=5436
+#     creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
 
-    ${GCP_SQL_PROXY} \
-    --instances=${project}:us-west1:${database}=tcp:${port} \
-    --credential_file=$creds
-}
+#     ${GCP_SQL_PROXY} \
+#     --instances=${project}:us-west1:${database}=tcp:${port} \
+#     --credentials-file=$creds
+# }
 
-function gcp_sql_rtb_prod {
-    # start the GCP SQL proxy using hard-coded params:
-    db=prod
-    # GCP_SQL_PROXY=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
-    project=pupil-prod
-    database=route_board
-    port=5436
-    creds=${HOME}/.ssh/pupil-dev-owner-prod-sa.json
+# function gcp_sql_rtb_prod {
+#     # start the GCP SQL proxy using hard-coded params:
+#     db=prod
+#     # GCP_SQL_PROXY=${HOME}/gsutil/google-cloud-sdk/bin/cloud_sql_proxy
+#     project=pupil-prod
+#     database=route_board
+#     port=5436
+#     creds=${HOME}/.ssh/pupil-dev-owner-prod-sa.json
 
-    ${GCP_SQL_PROXY} \
-    --instances=${project}:us-west1:${database}=tcp:${port} \
-    --credential_file=$creds
-}
+#     ${GCP_SQL_PROXY} \
+#     --instances=${project}:us-west1:${database}=tcp:${port} \
+#     --credentials-file=$creds
+# }
 
 
 function zpass_sql {
+    # start cloud-sql proxy for zpass-db
     local env=$1
-    local project=rtb-dev-167405
+    local project=$2
     local db=pupil-zpass-$env
-    local port=5437
-    local creds=pupil-dev-owner-qa-sa.json
-
-    gcp_sql $project $db $creds $port
+    local port=${3:-5437}
+    # local creds=pupil-dev-owner-qa-sa.json
+    local nick=pupil-${env}
+    echo zpass_sql $project $db $nick $port 
+    gcp_sql $project $db $nick $port
 }
+
+function zpass_sql_dev {
+    zpass_sql dev $PUPIL_DEV_ID
+}
+
+function zpass_sql_qa {
+    zpass_sql qa $PUPIL_DEV_ID
+}
+
+function zpass_sql_prod {
+    zpass_sql prod $PUPIL_PROD_ID
+}
+
+# function zpp_sql {
+function zpp_sql_qa {
+    # set up gcp sql proxy for zpp db
+    gcp_sql_proxy=${HOME}/google-cloud-sdk/bin/cloud_sql_proxy
+    project=rtb-dev-167405
+    database=pupil-zpassplus-qa
+    port=5438
+    creds=${HOME}/.ssh/pupil-dev-owner-qa-sa.json
+    ${gcp_sql_proxy} \
+    ${project}:us-west1:${database}=tcp:${port} \
+    --credentials-file=$creds
+}
+    
 
 function sops_encrypt {
     # this function depends on having the gcp_key available from pbpaste.
@@ -105,7 +210,7 @@ function sops_encrypt {
     # Otherwise, go to GCP->Security->Cryptographic keys, choose the right
     # project (eg zonar-working), find the name of the project you're working
     # on (eg pupil-route-board), got to far-right vertical '...' menu, click
-    # on 'Copy Resource ID', and then manually edit away the 'cryptoKeyVersions/<version'
+    # on 'Copy Resource ID', and then manually edit away the 'cryptoKeyVersions/<version>'
     # bit at the end (ugh).
     local gcp_key=$(pbpaste)
     echo encrypting using ${gcp_key}
@@ -180,7 +285,8 @@ function sops_recrypt_and_commit {
     git status
 }
 
-function use_project {
+function pupil_project {
+    # convenience (ha!) function to set project one of the two pupil projects based on env.
     env=$1
     case $env in
 	dev|qa|stag)
@@ -198,7 +304,47 @@ function use_project {
     gcloud config list
 }
 
+function zonar_project_names {
+    echo gtc-app-dev-na
+    echo pupil-dev
+    echo pupil-prod
+    echo zing-imports-app-prod-na
+    echo zonar-working
+    echo zonar-working-na
+    echo zonar-production
+    echo zonar-production-na
+    echo zonarsystems.net
+}
+
+function zonar_project_ids {
+    echo gtc-app-dev-na-ec6d
+    echo $PUPIL_DEV_ID
+    echo $PUPIL_PROD_ID
+    echo zing-imports-app-prod-na-b7f1 # zing
+    echo zonar-working
+    echo zonar-working-na-e22c
+    echo zonar-production
+    echo zonar-production-na-0b8a
+    echo 206678923482
+}
 
 function get_project {
     gcloud config get-value project
+}
+
+function set_project {
+    gcloud config set project ${1}
+}
+
+function find_vm {
+    grep_probe=$1
+    project=$2
+
+    gcloud config set project ${project}
+    gcloud compute instances list | grep ${grep_probe} | cut -f1 -d\  
+}
+
+function get_perms {
+    # WIP: parameterize this later
+    gcloud container clusters get-credentials zonar-working-na-2 --zone us-west1 --project zonar-working-na-e22c
 }

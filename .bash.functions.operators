@@ -1,0 +1,16 @@
+#-*-sh-*-
+
+function eq {
+    [[ "$1" == "$2" ]]
+}
+
+function ne {
+    [[ "$1" != "$2" ]]
+}
+
+# eq fred fred && echo equal || echo not equal
+# eq fred wilma && echo equal || echo not equal
+# ne fred fred && echo not equal || echo equal
+# ne fred wilma && echo not equal || echo equal
+
+

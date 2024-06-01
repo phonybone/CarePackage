@@ -1,0 +1,9 @@
+#!/bin/bash
+
+set -e
+
+srcfile=$1
+tmpfile=$(mktemp ~/tmp/env.XXXXXX)
+python $HOME/bin/zonar/export_yml.py $srcfile >$tmpfile
+source $tmpfile
+rm $tmpfile

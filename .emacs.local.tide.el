@@ -8,7 +8,8 @@
   ;; company is an optional dependency. You have to
   ;; install it separately via package-install
   ;; `M-x package-install [ret] company`
-  (company-mode +1))
+;;  (company-mode +1)
+  )
 
 ;; aligns annotation to the right hand side
 (setq company-tooltip-align-annotations t)
@@ -24,3 +25,6 @@
   :hook ((typescript-mode . tide-setup)
          (typescript-mode . tide-hl-identifier-mode)
          (before-save . tide-format-before-save)))
+
+(setq tide-tsserver-executable nil)
+;; (setq tide-tsserver-process-environment '("TSS_LOG=-level verbose -file /tmp/ss.log"))

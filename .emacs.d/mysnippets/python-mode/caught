@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: caught
+# key: caught
+# --
+F"caught {type(e)}: {e}"

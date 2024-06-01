@@ -8,7 +8,7 @@
 ;; Elpy:
 (when (require 'elpy nil t)
   (elpy-enable)
-  (pyvenv-activate "~/.virtualenvs/emacs")
+  (pyvenv-activate "~/.virtualenvs/3.7.3")
   (setq python-check-command "~/.virtualenvs/emacs/bin/flake8")
   )
 

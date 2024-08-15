@@ -16,6 +16,13 @@ function git-rm-deleted {
 
 function git-new-branch {
     local branch_name=$1
+    local main_branch
+    if git branch | grep -q main; then
+	main_branch=main
+    else
+	main_branch=master
+    fi
+    git switch ${main_branch} && git pull origin ${main_branch}
     git switch -c ${branch_name}
     export GIT_BRANCH=${branch_name}
 }
@@ -30,3 +37,46 @@ function git-current-sha {
     pbpaste
 }
 
+function git-push-new {
+    git push -u origin $(current_git_branch)
+}
+
+function git-add-for-status {
+    local $status=$1
+    local git_op=${2:-add}
+    git status | grep "${status}:" | awk '{ print $2}' | while read -r mod ; do
+	git $git_op $mod;
+    done
+    git status
+}
+
+function git-commit-modified {
+    commit_msg=$1
+    if [[ -z $commit_msg ]] ; then
+	echo git-commit-modified: no commit msg provided
+	return 1
+    fi
+    git-add-for-status modified
+    git commit -m "$(current_git_branch): $commit_msg"
+}
+
+function git-commit-deleted {
+    commit_msg=$1
+    if [[ -z $commit_msg ]] ; then
+	echo git-commit-deleted: no commit msg provided
+	return 1
+    fi
+    git-add-for-status deleted rm
+    git commit -m "$(current_git_branch): $commit_msg"
+}
+
+function git-commit-renamed {
+    git status | grep 'renamed:' | cut -f2 -d: | while read -r ren ; do
+	git commit -m "$(current_git_branch): ${ren}"
+    done
+}
+
+
+function git-push-new {
+    git push -u origin $(current_git_branch)
+}

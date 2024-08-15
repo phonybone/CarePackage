@@ -8,6 +8,9 @@ export ZAPY_API_KEY_PROD='213946ba-5f44-410d-98bd-aa6f7920d0ad'
 
 export ZPASS_ROOT=${HOME}/zp/APIs/zpass-api
 
+export JUMPBOX_LOCAL_PORT=5010
+export JUMPBOX_
+
 function zapy_api_key {
     # print the zapy-api key for a given $env
     local env=$(echo $1 | tr [:lower:] [:upper:])
@@ -124,6 +127,7 @@ function sops_mp_db_uri {
 function mp_db {
     local env=$1
     local psql_uri=$(sops_mp_db_uri $env)
+    echo $psql_uri
     psql $psql_uri
 }
 
@@ -141,6 +145,7 @@ function mp_db_prod {
 
 function zpass_db {
     # "root" function for connecting to zpass-db
+    # usage: zpass_db $env $country
     # requires zpass_sql (GCP SQL proxy) to be running on port 5437
     # exports PSQL_URI as extracted from zpass-api-env according to $env
     local env=$1
@@ -254,10 +259,10 @@ function update_sops {
 
 ########################################################################
 # git helpers
-function git-co-master {
-    git switch master
-    echo pulling from origin master...
-    git pull origin master
+function git-co-main {
+    git switch main
+    echo pulling from origin main...
+    git pull origin main
     if [[ ! -d "deploy" ]]; then
 	echo no deploy/
 	git switch -
@@ -265,38 +270,26 @@ function git-co-master {
     fi
 
     local files=$(find deploy -name '*.sops.yml')
-    desopsify sops ${files}
 
     git switch -
-}
-
-function desopsify {
-    # decrypt a list of sops files and write the results to disk, remove '.sops' from the input filename
-    # WIP
-    local files=$@
-
-    for fn in $files; do
-	local base=$(basename $fn)
-	local folder=$(dirname $fn)
-	local newpath=$(rm_elem "$base" .sops)
-	sops -d "${fn}" >${newpath}
-	echo ${fn}
-    done
-}
-
-function git-tag-release {
-    local version=$1
-    if [[ -z "$version" ]] ; then
-	>&2 echo "usage: git-tag-release <version>"
-	return 1
-    fi
-    git checkout master
-    git pull origin master
-    git tag -a "$version" -m "Version ${version}"
-    git push origin --tags
 }
 
 function pup_jumpbox_dev {
     gcloud container clusters get-credentials zonar-working-na-2 --zone us-west1 --project zonar-working-na-e22c
     kubectl exec -it -n cassandra-tools-dev `kubectl get po -n cassandra-tools-dev -o custom-columns=:metadata.name` -- bash
+}
+
+function gtc_jumpbox {
+    gcloud compute ssh --zone "us-west1-b" "pupil-dev-jumpbox" --tunnel-through-iap --project "rtb-dev-167405"
+}
+
+function ssh_jumpbox {
+    # used for getting access to GTC dbs (cloud-based)
+    # this is dependent on ~/.ssh/config.Host jumpbox-dev
+    ssh jumpbox-dev -L 5436:10.131.32.211:5432    
+}
+
+
+function get_rtb_account {
+    psql $PSQL_URI -c  "\copy (select * from account where code='$1') to stdout with csv"
 }

@@ -1,0 +1,6 @@
+#!/bin/bash
+# -*-sh-*- 
+
+function pydefs {
+     grep -E 'class|def [a-zA-Z0-9_]+' $*
+}

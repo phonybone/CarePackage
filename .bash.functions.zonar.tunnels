@@ -1,4 +1,7 @@
 #-*-sh-*-
+# I seriously doubt any of this will still work as local machines have
+# probably been turned off (eg $ZONAR_TUNNEL_PROXY)
+
 export LDAP_USERNAME=vcassen
 export ZADMIN_DEV_TUNNEL_LOCAL_PORT=5400
 export ZADMIN_DEV_TARGET=dev-zadmin.sea-001.zonarsystems.net:5432
@@ -20,7 +23,7 @@ function zonar_tunnel {
 
     kill_tunnel ${local_port}
 
-    ldap_pw
+    ldap_pw			# copy LDAP password to clipboard
     # local proxy='vcassen@dev-zing-import-001.sea-001.zonarsystems.net'
     local proxy=${ZONAR_TUNNEL_PROXY}
     # echo tunneling to ${target} via proxy ${proxy}

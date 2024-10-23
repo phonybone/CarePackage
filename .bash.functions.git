@@ -58,6 +58,7 @@ function git-commit-modified {
     fi
     git-add-for-status modified
     git commit -m "$(current_git_branch): $commit_msg"
+    git lg
 }
 
 function git-commit-deleted {

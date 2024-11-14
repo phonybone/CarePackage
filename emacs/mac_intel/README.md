@@ -1,0 +1,1 @@
+Emacs on linux and emacs on intel Macs don't always play the same way.  This folder is for Intel Macs.

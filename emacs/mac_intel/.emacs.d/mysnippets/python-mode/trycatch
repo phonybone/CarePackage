@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: trycatch
+# key: trycatch
+# --
+try:
+    $1
+except Exception as e:
+    print(F"caught {type(e)}: {e}")

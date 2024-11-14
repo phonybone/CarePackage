@@ -1,0 +1,64 @@
+# -*- mode: snippet -*-
+# name: clicmds
+# key: clicmds
+# binding: direct-keybinding
+# type: command
+# --
+def cmd(desc, record=False):
+    '''
+    Decorator to signify a command.
+    desc is a string describing the arguments needed by the command.
+    '''
+    def decorator(func):
+        @wraps(func)
+        def wrapped(route_id=None, *args, **kwargs):
+            if route_id is None:
+                retval = func(*args, **kwargs)
+            else:
+                retval = func(route_id, *args, **kwargs)
+
+            if record:
+                record_cmd(func.__name__, route_id, args, retval)
+            return retval
+
+        docstrs[func.__name__] = {'doc': func.__doc__, 'args': desc}
+        setattr(wrapped, 'is_cmd', True)
+        return wrapped
+    return decorator
+
+
+if __name__ == '__main__':
+    import sys
+
+    warn = partial(print, file=sys.stderr)
+
+    def die(msg, exit_code=1):
+        warn(msg)
+        sys.exit(exit_code)
+
+    def help_im_dying(msg=''):
+        help()
+        die(msg)
+
+    ########################################################################
+
+    cmds = [key for key, value in locals().items() if callable(value) and getattr(value, 'is_cmd', False)]
+
+    if len(sys.argv) <= 1:
+        help_im_dying()
+    cmd = sys.argv[1]
+    if cmd not in cmds:
+        help_im_dying(F"unknown command: {cmd}")
+
+    args = sys.argv[2:]
+    method = locals().get(cmd)
+    if method is None:
+        help_im_dying()
+
+    try:
+        method(*args)
+    except RuntimeError as e:
+        print(F"caught {type(e)}: {e}")
+        sys.exit(1)
+    sys.exit(0)
+

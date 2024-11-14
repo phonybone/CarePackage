@@ -160,12 +160,6 @@ function sandbox() {
     venv sandbox
 }
 
-function ytoj() {
-    # convert yaml (as read from stdin) to json
-    # see https://gist.github.com/mboersma/1329669
-    python -c 'import sys, yaml, json; y=yaml.safe_load(sys.stdin.read()); print(json.dumps(y, indent=4))'
-}
-
 function pyroot {
     start=${1:-.}
     pushd $start >/dev/null

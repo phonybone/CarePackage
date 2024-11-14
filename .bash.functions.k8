@@ -55,10 +55,6 @@ function connect_project {
     gcloud container clusters get-credentials vpc-native-working-1-kube-zonar --zone us-west1-a --project $project
 }
 
-function k8-list-context-names {
-    kubectl config get-contexts | awk '{print $2}' | grep -v NAME
-}
-
 function k8-all-ns {
     # list all namespaces via pods; can also just `k8 get namespaces`
     kubectl get pods --all-namespaces | cut -c1-48 | uniq

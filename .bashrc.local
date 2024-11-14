@@ -1,46 +1,66 @@
-export PATH="$PATH:${HOME}/bin"
-export PATH="$PATH:${HOME}/.node/bin"
-
-export LC_ALL=en_US.utf-8
-export LANG=en_US.utf-8
-
-export PYTHON2=/usr/local/bin/python
-export PYTHON3=/usr/local/bin/python3
-export DEFAULT_VENV=vpy3
-export VIRTUAL_ENV_DISABLE_PROMPT=1
-export VENVS_DIR=${HOME}/.virtualenvs
-export SYS_IPYTHON=/Library/Frameworks/Python.framework/Versions/2.7/bin/ipython
+#-*-sh-*-
 
 
-export EXPLORE_IGNORE='\.pyc$|__pycache__|\.git|node_modules'
+export PATH="${HOME}/bin:$PATH"
+export TZ=:/etc/local    # see https://blog.packagecloud.io/set-environment-variable-save-thousands-of-system-calls/
 
-# The next line updates PATH for the Google Cloud SDK.
-if [ -f '/Users/victor.cassen/google-cloud-sdk/path.bash.inc' ]; then source '/Users/victor.cassen/google-cloud-sdk/path.bash.inc'; fi
+# start virtual python environment
+# default_venv_name=autodb
+# default_venv=${VENVS_DIR}/${default_venv_name}/bin/activate
+# if [ -f $default_env ]; then
+#    # check to see if already running a virtual env; if so don't run a new one:
+#    python_exe=`which python`
+#    python_dir=`dirname $python_exe`
 
-# The next line enables shell command completion for gcloud.
-if [ -f '/Users/victor.cassen/google-cloud-sdk/completion.bash.inc' ]; then source '/Users/victor.cassen/google-cloud-sdk/completion.bash.inc'; fi
-
-# CPAN adds this for [local::lib]:
-# PATH="/Users/victor.cassen/perl5/bin${PATH:+:${PATH}}"; export PATH;
-# PERL5LIB="/Users/victor.cassen/perl5/lib/perl5${PERL5LIB:+:${PERL5LIB}}"; export PERL5LIB;
-# PERL_LOCAL_LIB_ROOT="/Users/victor.cassen/perl5${PERL_LOCAL_LIB_ROOT:+:${PERL_LOCAL_LIB_ROOT}}"; export PERL_LOCAL_LIB_ROOT;
-# PERL_MB_OPT="--install_base \"/Users/victor.cassen/perl5\""; export PERL_MB_OPT;
-# PERL_MM_OPT="INSTALL_BASE=/Users/victor.cassen/perl5"; export PERL_MM_OPT;
+#    if [ ! -e "${python_dir}/activate" ]; then
+#        source $default_venv
+#    fi
+# fi
 
 
-# Add timestamps to .bash.history:
+# Try this:
+export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+
+# added by Anaconda2 2.4.0 installer
+# export PATH="$PATH:/local/src/Anaconda/bin"
+
+# added by CPAN:
+# PATH="/home/victor/perl5/bin${PATH+:}${PATH}"; export PATH;
+PERL5LIB="/home/victor/perl5/lib/perl5${PERL5LIB+:}${PERL5LIB}"; export PERL5LIB;
+PERL_LOCAL_LIB_ROOT="/home/victor/perl5${PERL_LOCAL_LIB_ROOT+:}${PERL_LOCAL_LIB_ROOT}"; export PERL_LOCAL_LIB_ROOT;
+PERL_MB_OPT="--install_base \"/home/victor/perl5\""; export PERL_MB_OPT;
+PERL_MM_OPT="INSTALL_BASE=/home/victor/perl5"; export PERL_MM_OPT;
+
+
+
+export ANSIBLE_VAULT_PASSWORD_FILE=${HOME}/.ssh/ansible-vault-password.txt
+
+export EXPLORE_IGNORE='__pycache__|node_modules'
+
+if ! $(which pbcopy >/dev/null); then
+    alias pbcopy='xclip -selection clipboard'
+fi
+
+if ! $(which pbpaste >/dev/null); then
+    alias pbpaste='xclip -selection clipboard -out'
+fi
+
+export FREETIER_PROJECT_ID=freetier-219419
+export GCP_COMPUTE_ZONE=us-west1-a
+
+# postgres:
+export POSTGRES_USER_PWD=$(cat $HOME/.ssh/psql-pwd.txt)
 
 # pyenv:
 export PYENV_ROOT="$HOME/.pyenv"
-export PATH="$PYENV_ROOT/shims:$PATH"
-
+export PATH="$PYENV_ROOT/bin:$PATH"
 eval "$(pyenv init -)"
-if which pyenv-virtualenv-init >/dev/null; then
-   eval "$(pyenv virtualenv-init -)";
-fi
+eval "$(pyenv virtualenv-init -)"
 
-export ZONAR_PROJECTS=${HOME}/zp
-export ZPASS_ROOT=${ZONAR_PROJECTS}/APIs/zpass-api
-
-# starship uber-prompt:
+# starship (uber-prompt)
+# Config file: file://~/.config/starship.toml
 eval "$(starship init bash)"
+
+# weird typescript cpu-saver hack
+# see https://cmdcolin.github.io/2021-09-05-typescript.html
+export TSC_WATCHFILE=UseFsEventsWithFallbackDynamicPolling

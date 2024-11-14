@@ -1,0 +1,11 @@
+# -*- mode: snippet -*-
+# name: attack
+# key: attack
+# --
+	{
+	    "name": "$1",
+	    "range": $2,
+	    "modifier": $3,
+	    "damage": "$4",
+	    "type": "$5"
+	},

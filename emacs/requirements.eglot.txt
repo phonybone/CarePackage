@@ -1,0 +1,9 @@
+python-lsp-server[all]
+
+# rope
+# pyflakes
+# flake8
+# mccabe
+# pycodestyle
+# yapf
+

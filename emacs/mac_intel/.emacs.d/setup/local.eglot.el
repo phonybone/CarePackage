@@ -25,3 +25,20 @@
 		'((:pylsp . (:configuratinSources ["flake8"] :plugins (:pycodestyle (:enabled nil) :mccabe (:enabled nil) :flake8 (:enabled t))))))
   :hook ((python-mode . eglot-ensure)))
 		
+;; typescript ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+(add-to-list 'eglot-server-programs
+             '((typescript-mode . ("typescript-language-server" "--stdio"))
+               (typescript-tsx-mode . ("typescript-language-server" "--stdio"))))
+
+(add-to-list 'auto-mode-alist '("\\.ts\\'" . typescript-mode))
+(add-to-list 'auto-mode-alist '("\\.tsx\\'" . typescript-tsx-mode))
+
+(defun eglot-ensure-project ()
+  (unless (bound-and-true-p eglot-current-project)
+    (eglot-ensure)))
+
+(use-package typescript-mode
+  :hook (typescript-mode . eglot-ensure-project))
+
+(use-package typescript-tsx-mode
+  :hook (typescript-tsx-mode . eglot-ensure-project))

@@ -16,8 +16,18 @@
                 '((:pylsp . (:configurationSources ["flake8"] :plugins (:pycodestyle (:enabled nil) :mccabe (:enabled nil) :flake8 (:enabled t))))))
 
   :hook
-  ((python-mode . eglot-ensure)))
+  (
+   (python-mode . eglot-ensure)
+   (typescript-mode . eglot-ensure)
+  )
+)
 
+(with-eval-after-load 'eglot
+  (add-to-list 'eglot-server-programs
+               '(typescript-mode . ("typescript-language-server" "--stdio"))))
+
+;; helpful pages
+;; https://www.gnu.org/software/emacs/manual/html_node/eglot/Setting-Up-LSP-Servers.html
 
 ;; pyright
 ;; https://emacs-lsp.github.io/lsp-pyright/

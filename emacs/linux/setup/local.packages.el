@@ -1,0 +1,2 @@
+;; realgud
+(load-library 'realgud)

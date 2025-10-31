@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: printvar
+# key: printvar
+# --
+print(F"$1={$1}")

@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: printf2
+# key: printf2
+# --
+print(F"$1{$2} $3{$4}")

@@ -1,24 +1,15 @@
 # -*- mode: snippet -*-
-# name: ifmtets
+# name: ifmtests
 # key: ifmtests
-# binding: direct-keybinding
-# expand-env: ((some-var some-value))
-# type: command
 # --
 if __name__ == '__main__':
     import sys
-
-    warn = partial(print, file=sys.stderr)
-
-    def die(msg, exit_code=1):
-        warn(msg)
-        sys.exit(exit_code)
 
     def test_something():
         pass
 
     ########################################################################
-    cmds = [key for key, value in locals().items() if callable(value)]
+    cmds = [key for key, value in locals().items() if key.startswith('test_') and callable(value)]
     usage = F"usage: python dicts.py [{'|'.join(cmds)}]"
     if len(sys.argv) <= 1:
         die(usage)

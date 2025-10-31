@@ -1,0 +1,15 @@
+# -*- mode: snippet -*-
+# name: leet
+# key: leet
+# --
+if __name__ == '__main__':
+    sol = Solution()
+    testcases = (
+        (),
+    )
+
+    for case in testcases:
+        args, expected = case
+        actual = sol.lengthOfLongestSubstring(*args)
+        assert actual == expected, F"actual={actual}, expected={expected}"
+

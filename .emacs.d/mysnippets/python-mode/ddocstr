@@ -1,0 +1,7 @@
+# -*- mode: snippet -*-
+# name: ddocstr
+# key: """
+# --
+  """
+  $1.
+  """

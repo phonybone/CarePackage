@@ -1,0 +1,9 @@
+# -*- mode: snippet -*-
+# name: oswalk
+# key: oswalk
+# --
+for dirpath, dirnames, filenames in os.walk(root):
+    for filename in filenames:
+        $1pass
+    for dirname in dirnames:
+        $2pass

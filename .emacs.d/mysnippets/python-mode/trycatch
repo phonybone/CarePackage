@@ -4,5 +4,6 @@
 # --
 try:
     $1
-except Exception as e:
-    print(F"caught {type(e)}: {e}")
+except $2Exception as e:
+    $3print(F"caught {type(e)}: {e}")
+    

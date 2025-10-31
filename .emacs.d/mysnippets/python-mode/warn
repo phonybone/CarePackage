@@ -1,0 +1,5 @@
+# -*- mode: snippet -*-
+# name: warn
+# key: warn
+# --
+print(F"$1: {$2}", file=sys.stderr)
